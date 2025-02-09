@@ -1,6 +1,6 @@
 # The-Plugin-Lab
 
-## Design Document/Project Proposal 
+## Design Document
 
 ### 1. Abstract 
 
