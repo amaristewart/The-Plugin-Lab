@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PluginProject name="Basic Compressor" version="1.0">
+    <Nodes>
+        <Node type="CompThreshold" x="100" y="100">
+            <Parameters threshold="-20.0"/>
+        </Node>
+        <Node type="CompRatio" x="250" y="100">
+            <Parameters ratio="4.0"/>
+        </Node>
+        <Node type="CompAttack" x="400" y="100">
+            <Parameters attack="10.0"/>
+        </Node>
+        <Node type="CompRelease" x="550" y="100">
+            <Parameters release="100.0"/>
+        </Node>
+    </Nodes>
+    <Connections>
+        <Connection sourceNode="0" sourcePort="0" destNode="1" destPort="0"/>
+        <Connection sourceNode="1" sourcePort="0" destNode="2" destPort="0"/>
+        <Connection sourceNode="2" sourcePort="0" destNode="3" destPort="0"/>
+    </Connections>
+</PluginProject> 

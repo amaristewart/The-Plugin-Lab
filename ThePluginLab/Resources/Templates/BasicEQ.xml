@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PluginProject name="Basic EQ" version="1.0">
+    <Nodes>
+        <Node type="EQLowShelf" x="100" y="100">
+            <Parameters frequency="200.0" gain="0.0" q="0.707"/>
+        </Node>
+        <Node type="EQPeak" x="250" y="100">
+            <Parameters frequency="1000.0" gain="0.0" q="1.0"/>
+        </Node>
+        <Node type="EQHighShelf" x="400" y="100">
+            <Parameters frequency="5000.0" gain="0.0" q="0.707"/>
+        </Node>
+    </Nodes>
+    <Connections>
+        <Connection sourceNode="0" sourcePort="0" destNode="1" destPort="0"/>
+        <Connection sourceNode="1" sourcePort="0" destNode="2" destPort="0"/>
+    </Connections>
+</PluginProject> 

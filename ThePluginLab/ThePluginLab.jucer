@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="mjIlhL" name="ThePluginLab" projectType="guiapp" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
+  <MAINGROUP id="ISoYfp" name="ThePluginLab">
+    <GROUP id="{217CB5B0-6CB2-98EA-942F-640091E54B55}" name="Resources">
+      <GROUP id="{39DB3B42-E4FE-BD45-B29F-964106CB7C4B}" name="Audio">
+        <FILE id="UsvZ6b" name="hover.wav" compile="0" resource="1" file="../../../../Downloads/hover.wav"/>
+        <FILE id="dPn8K6" name="click.wav" compile="0" resource="1" file="../../../../Downloads/click.wav"/>
+      </GROUP>
+      <GROUP id="{3EC8DE22-7220-8FB7-E9B3-FB5861FF614C}" name="Images">
+        <FILE id="pPrDam" name="PluginLabLogo.png" compile="0" resource="1"
+              file="Resources/Images/PluginLabLogo.png"/>
+      </GROUP>
+      <GROUP id="{1B09A183-EC7B-637C-B06A-FB6BD7F0DCF1}" name="Templates">
+        <FILE id="N1LRrh" name="BasicCompressor.xml" compile="0" resource="1"
+              file="Resources/Templates/BasicCompressor.xml"/>
+        <FILE id="BRgJTH" name="BasicEQ.xml" compile="0" resource="1" file="Resources/Templates/BasicEQ.xml"/>
+      </GROUP>
+    </GROUP>
+    <GROUP id="{C35F9EDA-B525-B677-A191-4BDDBFCAAE6E}" name="Source"/>
+    <GROUP id="{6C289D73-F928-6C73-4BE4-641EA046383D}" name="Audio">
+      <FILE id="daMpWr" name="AudioPort.h" compile="0" resource="0" file="Source/Audio/AudioPort.h"/>
+      <GROUP id="{E84F908B-4B5E-317A-4992-8E06603C4814}" name="Graphs">
+        <FILE id="A5qL8m" name="AudioProcessingGraph.cpp" compile="1" resource="0"
+              file="Source/Audio/Graphs/AudioProcessingGraph.cpp"/>
+        <FILE id="bu3AK4" name="AudioProcessingGraph.h" compile="0" resource="0"
+              file="Source/Audio/Graphs/AudioProcessingGraph.h"/>
+      </GROUP>
+      <GROUP id="{C27EE09A-5948-8785-1A53-534244B7300C}" name="Processors">
+        <FILE id="MiLM2X" name="CompressorProcessor.cpp" compile="1" resource="0"
+              file="Source/Audio/Processors/CompressorProcessor.cpp"/>
+        <FILE id="p5ykBr" name="CompressorProcessor.h" compile="0" resource="0"
+              file="Source/Audio/Processors/CompressorProcessor.h"/>
+        <FILE id="rgMQkv" name="EqualizerProcessor.cpp" compile="1" resource="0"
+              file="Source/Audio/Processors/EqualizerProcessor.cpp"/>
+        <FILE id="tyNkwh" name="EqualizerProcessor.h" compile="0" resource="0"
+              file="Source/Audio/Processors/EqualizerProcessor.h"/>
+        <FILE id="LQAbjT" name="PluginAudioProcessor.h" compile="0" resource="0"
+              file="Source/Audio/Processors/PluginAudioProcessor.h"/>
+      </GROUP>
+    </GROUP>
+    <GROUP id="{77F971E2-136D-9CC2-DEDF-9269D41CF620}" name="Common">
+      <FILE id="nXHvgR" name="Features.h" compile="0" resource="0" file="Source/Common/Features.h"/>
+      <FILE id="AgoeK9" name="Forward.h" compile="0" resource="0" file="Source/Common/Forward.h"/>
+      <FILE id="mLt3Hz" name="Types.h" compile="0" resource="0" file="Source/Common/Types.h"/>
+    </GROUP>
+    <GROUP id="{B5CED22C-01F3-2C17-24E1-BFB94400C48F}" name="Components">
+      <FILE id="v3K0FM" name="ConnectionComponent.cpp" compile="1" resource="0"
+            file="Source/Components/ConnectionComponent.cpp"/>
+      <FILE id="DJ5yog" name="ConnectionComponent.h" compile="0" resource="0"
+            file="Source/Components/ConnectionComponent.h"/>
+      <FILE id="L5aISw" name="DraggableComponent.h" compile="0" resource="0"
+            file="Source/Components/DraggableComponent.h"/>
+      <FILE id="J5dTCS" name="PluginNodeComponent.cpp" compile="1" resource="0"
+            file="Source/Components/PluginNodeComponent.cpp"/>
+      <FILE id="ajuqRZ" name="PluginNodeComponent.h" compile="0" resource="0"
+            file="Source/Components/PluginNodeComponent.h"/>
+      <FILE id="pV3d8i" name="VisualizerComponent.h" compile="0" resource="0"
+            file="Source/Components/VisualizerComponent.h"/>
+    </GROUP>
+    <GROUP id="{2CC882D2-95E2-3E10-10D9-D1EADDE61019}" name="Connections">
+      <FILE id="IzzIZK" name="AudioConnection.cpp" compile="1" resource="0"
+            file="Source/Connections/AudioConnection.cpp"/>
+      <FILE id="eDjDpv" name="AudioConnection.h" compile="0" resource="0"
+            file="Source/Connections/AudioConnection.h"/>
+      <FILE id="OPOUmu" name="AudioConnectionPoint.cpp" compile="1" resource="0"
+            file="Source/Connections/AudioConnectionPoint.cpp"/>
+      <FILE id="J4o8Nu" name="AudioConnectionPoint.h" compile="0" resource="0"
+            file="Source/Connections/AudioConnectionPoint.h"/>
+    </GROUP>
+    <GROUP id="{32617D0E-E7EF-E84B-874B-D3B33752D06C}" name="Export">
+      <FILE id="XkG0ZY" name="PluginExporter.h" compile="0" resource="0"
+            file="Source/Export/PluginExporter.h"/>
+      <FILE id="y1esYE" name="PluginProject.h" compile="0" resource="0" file="Source/Export/PluginProject.h"/>
+    </GROUP>
+    <GROUP id="{50B7C2EC-F797-7AC6-4BDF-C2EA6A50A2BD}" name="GUI">
+      <FILE id="sODhw7" name="ComponentPanel.cpp" compile="1" resource="0"
+            file="Source/GUI/ComponentPanel.cpp"/>
+      <FILE id="aMZhlr" name="ComponentPanel.h" compile="0" resource="0"
+            file="Source/GUI/ComponentPanel.h"/>
+      <FILE id="Ro9wHm" name="MainLayout.cpp" compile="1" resource="0" file="Source/GUI/MainLayout.cpp"/>
+      <FILE id="itb2ya" name="MainLayout.h" compile="0" resource="0" file="Source/GUI/MainLayout.h"/>
+      <FILE id="JH9Tdl" name="PluginEditorCanvas.cpp" compile="1" resource="0"
+            file="Source/GUI/PluginEditorCanvas.cpp"/>
+      <FILE id="FOUnon" name="PluginEditorCanvas.h" compile="0" resource="0"
+            file="Source/GUI/PluginEditorCanvas.h"/>
+      <FILE id="z6MBgC" name="PluginToolbar.cpp" compile="1" resource="0"
+            file="Source/GUI/PluginToolbar.cpp"/>
+      <FILE id="Ujujy0" name="PluginToolbar.h" compile="0" resource="0" file="Source/GUI/PluginToolbar.h"/>
+      <FILE id="bAtEA9" name="TopMenuBar.cpp" compile="1" resource="0" file="Source/GUI/TopMenuBar.cpp"/>
+      <FILE id="NHJ8hH" name="TopMenuBar.h" compile="0" resource="0" file="Source/GUI/TopMenuBar.h"/>
+      <FILE id="qsPElI" name="TutorialSystem.h" compile="0" resource="0"
+            file="Source/GUI/TutorialSystem.h"/>
+    </GROUP>
+    <FILE id="KbAotb" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+    <FILE id="yoKdj5" name="MainComponent.cpp" compile="1" resource="0"
+          file="Source/MainComponent.cpp"/>
+    <FILE id="zzCA6c" name="MainComponent.h" compile="0" resource="0" file="Source/MainComponent.h"/>
+    <GROUP id="{ECB57555-699D-EFA5-5CC0-A59EA3EB329C}" name="Nodes">
+      <FILE id="SWAkLU" name="CompressorNode.cpp" compile="1" resource="0"
+            file="Source/Nodes/CompressorNode.cpp"/>
+      <FILE id="Y9ZFWA" name="CompressorNode.h" compile="0" resource="0"
+            file="Source/Nodes/CompressorNode.h"/>
+      <FILE id="ukNEha" name="EqualizerNode.cpp" compile="1" resource="0"
+            file="Source/Nodes/EqualizerNode.cpp"/>
+      <FILE id="Va8zOG" name="EqualizerNode.h" compile="0" resource="0" file="Source/Nodes/EqualizerNode.h"/>
+      <FILE id="eQUzTN" name="GuiNode.cpp" compile="1" resource="0" file="Source/Nodes/GuiNode.cpp"/>
+      <FILE id="Qp7295" name="GuiNode.h" compile="0" resource="0" file="Source/Nodes/GuiNode.h"/>
+    </GROUP>
+    <GROUP id="{379C1B46-7862-B3C5-2FA9-CBC9A1739731}" name="Visualizers">
+      <FILE id="vZqIgP" name="AudioVisualizer.cpp" compile="1" resource="0"
+            file="Source/Visualizers/AudioVisualizer.cpp"/>
+      <FILE id="kLSIUr" name="AudioVisualizer.h" compile="0" resource="0"
+            file="Source/Visualizers/AudioVisualizer.h"/>
+      <FILE id="ktvgY4" name="CompressorVisualizer.cpp" compile="1" resource="0"
+            file="Source/Visualizers/CompressorVisualizer.cpp"/>
+      <FILE id="OvxNBe" name="CompressorVisualizer.h" compile="0" resource="0"
+            file="Source/Visualizers/CompressorVisualizer.h"/>
+      <FILE id="IW0dqS" name="EQVisualizer.cpp" compile="1" resource="0"
+            file="Source/Visualizers/EQVisualizer.cpp"/>
+      <FILE id="PEtiDM" name="EQVisualizer.h" compile="0" resource="0" file="Source/Visualizers/EQVisualizer.h"/>
+      <FILE id="e9vIYq" name="ResponseCurveComponent.cpp" compile="1" resource="0"
+            file="Source/Visualizers/ResponseCurveComponent.cpp"/>
+      <FILE id="mHDeV5" name="ResponseCurveComponent.h" compile="0" resource="0"
+            file="Source/Visualizers/ResponseCurveComponent.h"/>
+      <FILE id="SPpz3x" name="SpectrumAnalyzer.h" compile="0" resource="0"
+            file="Source/Visualizers/SpectrumAnalyzer.h"/>
+      <FILE id="b5KaFD" name="WaveformDisplay.h" compile="0" resource="0"
+            file="Source/Visualizers/WaveformDisplay.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_devices" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_formats" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_processors" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_audio_utils" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+    <MODULE id="juce_video" showAllCode="1" useLocalCopy="0" useGlobalPath="0"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
+  <EXPORTFORMATS>
+    <XCODE_MAC targetFolder="Builds/MacOSX">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="ThePluginLab"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="ThePluginLab"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_audio_basics" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../../JUCE/modules"/>
+        <MODULEPATH id="juce_video" path="../../../JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
+  </EXPORTFORMATS>
+</JUCERPROJECT>
