@@ -2,71 +2,58 @@
 #include <JuceHeader.h>
 #include "../Common/Types.h"
 
+// Forward declarations
 class AudioConnectionPoint;
 
-class PluginNodeComponent : public juce::Component,
-                          public juce::DragAndDropTarget,
-                          public juce::Timer
+/**
+ * Base class for all plugin node components displayed on the canvas
+ */
+class PluginNodeComponent : public juce::Component
 {
 public:
     PluginNodeComponent(const juce::String& name, const juce::Colour& color);
-    virtual ~PluginNodeComponent() = default;
+    virtual ~PluginNodeComponent() override;
     
-    virtual NodeType getType() const = 0;
-    virtual juce::AudioProcessor* getProcessor() = 0;
-    virtual void paint(juce::Graphics&) override;
-    virtual void resized() override;
-    
-    // Mouse handling
+    // Component overrides
+    void paint(juce::Graphics& g) override;
+    void resized() override;
     void mouseDown(const juce::MouseEvent& e) override;
     void mouseDrag(const juce::MouseEvent& e) override;
     void mouseUp(const juce::MouseEvent& e) override;
     
-    // Port and parameter management
-    virtual void addInputPort(const juce::String& name);
-    virtual void addOutputPort(const juce::String& name);
-    virtual void addParameter(const juce::String& name, float min, float max, float defaultValue);
-    void layoutParameters();
+    // Type and processor accessors - pure virtual methods
+    virtual NodeType getType() const = 0;
+    virtual juce::AudioProcessor* getProcessor() = 0;
     
-    // Position getters
-    juce::Point<float> getInputPosition(int index) const;
-    juce::Point<float> getOutputPosition(int index) const;
+    // Connection points - pure virtual methods
+    virtual void addInputPort(const juce::String& name) = 0;
+    virtual void addOutputPort(const juce::String& name) = 0;
     
-    // Connection management
-    void createConnectionPoints();
-    void addConnectionPoint(AudioConnectionPoint* point);
-    void removeConnectionPoint(AudioConnectionPoint* point);
+    // Get port accessors - pure virtual methods
+    virtual AudioConnectionPoint* getInputPort(int index) const = 0;
+    virtual AudioConnectionPoint* getOutputPort(int index) const = 0;
     
-    // DragAndDropTarget implementation
-    bool isInterestedInDragSource(const juce::DragAndDropTarget::SourceDetails& details) override;
-    void itemDropped(const juce::DragAndDropTarget::SourceDetails& details) override;
+    // Get node properties
+    juce::String getName() const { return nodeName; }
+    juce::Colour getColour() const { return nodeColor; }
+    void setColour(const juce::Colour& color) { nodeColor = color; repaint(); }
+
+    // Node ID method
+    int getNodeId() const 
+    {
+        // Generate a simple ID based on the component's pointer value
+        return static_cast<int>(reinterpret_cast<std::uintptr_t>(this) & 0xFFFF);
+    }
     
 protected:
+    // Node properties
     juce::String nodeName;
     juce::Colour nodeColor;
-    std::unique_ptr<juce::AudioProcessor> processor;
-    juce::OwnedArray<juce::Slider> parameterSliders;
-    juce::Array<AudioConnectionPoint*> connectionPoints;
     
+    // Dragging behavior
     juce::ComponentDragger dragger;
     juce::ComponentBoundsConstrainer constrainer;
     bool isDragging = false;
-    
-    void layoutControls();
-    
-    // Add meter update method
-    virtual void updateMeters() {}
-    
-    // Update timer
-    void startMeterUpdates() 
-    { 
-        startTimerHz(30); 
-    }
-    
-    void timerCallback() override
-    {
-        updateMeters();
-    }
     
 private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginNodeComponent)

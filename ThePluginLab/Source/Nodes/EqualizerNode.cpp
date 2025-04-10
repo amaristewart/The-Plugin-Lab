@@ -1,215 +1,305 @@
 #include "EqualizerNode.h"
-#include "../Audio/Processors/EqualizerProcessor.h"
 
-EqualizerNode::EqualizerNode() 
-    : PluginNodeComponent("Equalizer", juce::Colours::orange)
+EqualizerNode::EqualizerNode()
 {
-    processor = std::make_unique<EqualizerProcessor>();
-    visualizer = std::make_unique<EQVisualizer>();
+    // Set up sliders
+    frequencySlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
+    frequencySlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    frequencySlider.setRange(20.0, 20000.0, 1.0);
+    frequencySlider.setSkewFactorFromMidPoint(1000.0); // Logarithmic frequency control
+    frequencySlider.setValue(1000.0);
+    frequencySlider.addListener(this);
+    frequencySlider.setTextValueSuffix(" Hz");
+    addAndMakeVisible(frequencySlider);
     
-    // Initialize UI components
-    typeSelector = std::make_unique<juce::ComboBox>();
-    typeSelector->addItem("Lowpass", static_cast<int>(EQType::Lowpass) + 1);
-    typeSelector->addItem("Highpass", static_cast<int>(EQType::Highpass) + 1);
-    typeSelector->addItem("Bandpass", static_cast<int>(EQType::Bandpass) + 1);
-    typeSelector->addItem("Notch", static_cast<int>(EQType::Notch) + 1);
-    typeSelector->addItem("Peaking", static_cast<int>(EQType::Peaking) + 1);
-    typeSelector->setSelectedItemIndex(0);
-    addAndMakeVisible(*typeSelector);
-    typeSelector->addListener(this);
+    gainSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
+    gainSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    gainSlider.setRange(-24.0, 24.0, 0.1);
+    gainSlider.setValue(0.0);
+    gainSlider.addListener(this);
+    gainSlider.setTextValueSuffix(" dB");
+    addAndMakeVisible(gainSlider);
     
-    bypassButton = std::make_unique<juce::ToggleButton>("Bypass");
-    addAndMakeVisible(*bypassButton);
-    bypassButton->addListener(this);
+    qSlider.setSliderStyle(juce::Slider::RotaryVerticalDrag);
+    qSlider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
+    qSlider.setRange(0.1, 10.0, 0.01);
+    qSlider.setValue(0.707);
+    qSlider.addListener(this);
+    qSlider.setSkewFactorFromMidPoint(1.0);
+    addAndMakeVisible(qSlider);
     
-    addAndMakeVisible(*visualizer);
+    // Set up filter type selector
+    typeSelector.addItem("Low Pass", EQProcessor::LowPass + 1);
+    typeSelector.addItem("High Pass", EQProcessor::HighPass + 1);
+    typeSelector.addItem("Low Shelf", EQProcessor::LowShelf + 1);
+    typeSelector.addItem("High Shelf", EQProcessor::HighShelf + 1);
+    typeSelector.addItem("Band Pass", EQProcessor::BandPass + 1);
+    typeSelector.addItem("Notch", EQProcessor::Notch + 1);
+    typeSelector.addItem("Peak", EQProcessor::Peak + 1);
+    typeSelector.setSelectedId(EQProcessor::Peak + 1);
+    typeSelector.addListener(this);
+    addAndMakeVisible(typeSelector);
     
-    // Add parameters with ranges based on type
-    addParameter("Frequency", 20.0f, 20000.0f, 1000.0f);
-    addParameter("Gain", -24.0f, 24.0f, 0.0f);
-    addParameter("Q", 0.1f, 10.0f, 1.0f);
+    // Set up help button
+    helpButton.setButtonText("?");
+    helpButton.addListener(this);
+    addAndMakeVisible(helpButton);
     
-    for (auto* slider : parameterSliders)
-        slider->addListener(this);
+    // Set up band selector buttons
+    for (int i = 0; i < 5; ++i) {
+        auto button = std::make_unique<juce::TextButton>("Band " + juce::String(i + 1));
+        button->setClickingTogglesState(true);
+        button->setRadioGroupId(1);
+        button->addListener(this);
+        button->setToggleState(i == 0, juce::dontSendNotification);
+        addAndMakeVisible(*button);
+        bandButtons.add(std::move(button));
+    }
     
-    setSize(200, 200);
-    resized();
+    // Set size
+    setSize(500, 300);
+    
+    // Initialize with default values
+    selectedBand = 0;
+    updateControls();
 }
 
 EqualizerNode::~EqualizerNode()
 {
-    typeSelector->removeListener(this);
-    bypassButton->removeListener(this);
+    // No cleanup needed
+}
+
+void EqualizerNode::paint(juce::Graphics& g)
+{
+    // Background
+    g.fillAll(juce::Colours::darkgrey);
     
-    for (auto* slider : parameterSliders)
-        slider->removeListener(this);
+    // Draw EQ curve - simplified for prototype
+    auto responseArea = juce::Rectangle<int>(20, 20, getWidth() - 40, 100);
+    g.setColour(juce::Colours::black);
+    g.fillRect(responseArea);
+    g.setColour(juce::Colours::white);
+    g.drawRect(responseArea);
+    
+    // Draw a simple frequency response curve (just for visualization)
+    g.setColour(juce::Colours::orange);
+    juce::Path responseCurve;
+    
+    float startX = responseArea.getX();
+    float endX = responseArea.getRight();
+    float midY = responseArea.getCentreY();
+    float height = responseArea.getHeight() * 0.8f;
+    
+    responseCurve.startNewSubPath(startX, midY);
+    
+    // Draw different curve based on selected filter type
+    EQProcessor::FilterType type = eqProcessor.getFilterType(selectedBand);
+    float freq = eqProcessor.getFrequency(selectedBand);
+    float gain = eqProcessor.getGain(selectedBand);
+    float q = eqProcessor.getQ(selectedBand);
+    
+    // Normalize frequency to x position
+    float normFreq = (std::log10(freq) - std::log10(20.0f)) / (std::log10(20000.0f) - std::log10(20.0f));
+    float freqX = startX + normFreq * responseArea.getWidth();
+    
+    // Just visual representation - not accurate filter response
+    switch (type) {
+        case EQProcessor::LowPass:
+            responseCurve.quadraticTo(freqX, midY, endX, midY + height/2);
+            break;
+        case EQProcessor::HighPass:
+            responseCurve.quadraticTo(freqX, midY, startX, midY + height/2);
+            break;
+        case EQProcessor::Peak:
+        {
+            float peakHeight = -gain * height / 48.0f; // normalize gain to height
+            responseCurve.quadraticTo(freqX - responseArea.getWidth() * 0.1f, midY,
+                                    freqX, midY + peakHeight);
+            responseCurve.quadraticTo(freqX + responseArea.getWidth() * 0.1f, midY,
+                                    endX, midY);
+            break;
+        }
+        default:
+            // Simple line for other types
+            responseCurve.lineTo(endX, midY);
+            break;
+    }
+    
+    g.strokePath(responseCurve, juce::PathStrokeType(2.0f));
+    
+    // Draw labels
+    g.setColour(juce::Colours::white);
+    g.setFont(16.0f);
+    g.drawText("Frequency", frequencySlider.getX(), frequencySlider.getBottom(), frequencySlider.getWidth(), 20, juce::Justification::centred);
+    g.drawText("Gain", gainSlider.getX(), gainSlider.getBottom(), gainSlider.getWidth(), 20, juce::Justification::centred);
+    g.drawText("Q", qSlider.getX(), qSlider.getBottom(), qSlider.getWidth(), 20, juce::Justification::centred);
+    g.drawText("Filter Type", typeSelector.getX(), typeSelector.getY() - 20, typeSelector.getWidth(), 20, juce::Justification::centred);
+    
+    // Title
+    g.setFont(22.0f);
+    g.drawText("Equalizer", 0, 0, getWidth(), 20, juce::Justification::centred);
+    
+    // Selected band indicator
+    g.setFont(18.0f);
+    g.drawText("Band: " + juce::String(selectedBand + 1), getWidth() - 100, 0, 100, 20, juce::Justification::centred);
 }
 
 void EqualizerNode::resized()
 {
-    // ... existing resized code ...
+    // Position controls
+    auto area = getLocalBounds().reduced(10);
+    
+    // Response area at top
+    auto responseArea = area.removeFromTop(120);
+    
+    // Band buttons at bottom
+    auto buttonArea = area.removeFromBottom(40);
+    int buttonWidth = buttonArea.getWidth() / bandButtons.size();
+    for (int i = 0; i < bandButtons.size(); ++i) {
+        bandButtons[i]->setBounds(buttonArea.removeFromLeft(buttonWidth).reduced(4));
+    }
+    
+    // Position sliders and selector
+    area.removeFromBottom(10); // spacing
+    
+    int controlWidth = area.getWidth() / 3;
+    frequencySlider.setBounds(area.removeFromLeft(controlWidth).reduced(5));
+    gainSlider.setBounds(area.removeFromLeft(controlWidth).reduced(5));
+    qSlider.setBounds(area.removeFromLeft(controlWidth).reduced(5));
+    
+    typeSelector.setBounds(responseArea.getX() + 10, responseArea.getBottom() - 30, 
+                          responseArea.getWidth() - 20, 24);
+    helpButton.setBounds(getWidth() - 30, 10, 20, 20);
 }
 
-void EqualizerNode::comboBoxChanged(juce::ComboBox* comboBox)
+void EqualizerNode::setType(int bandIndex, EQProcessor::FilterType type)
 {
-    if (comboBox == typeSelector.get())
-        typeChanged();
+    if (bandIndex >= 0 && bandIndex < eqProcessor.getNumBands()) {
+        eqProcessor.setFilterType(bandIndex, type);
+        updateFilter();
+    }
+}
+
+void EqualizerNode::setFrequency(int bandIndex, float frequency)
+{
+    if (bandIndex >= 0 && bandIndex < eqProcessor.getNumBands()) {
+        eqProcessor.setFrequency(bandIndex, frequency);
+        updateFilter();
+    }
+}
+
+void EqualizerNode::setGain(int bandIndex, float gain)
+{
+    if (bandIndex >= 0 && bandIndex < eqProcessor.getNumBands()) {
+        eqProcessor.setGain(bandIndex, gain);
+        updateFilter();
+    }
+}
+
+void EqualizerNode::setQ(int bandIndex, float q)
+{
+    if (bandIndex >= 0 && bandIndex < eqProcessor.getNumBands()) {
+        eqProcessor.setQ(bandIndex, q);
+        updateFilter();
+    }
+}
+
+float EqualizerNode::getFrequency(int bandIndex) const
+{
+    return eqProcessor.getFrequency(bandIndex);
+}
+
+float EqualizerNode::getGain(int bandIndex) const
+{
+    return eqProcessor.getGain(bandIndex);
+}
+
+float EqualizerNode::getQ(int bandIndex) const
+{
+    return eqProcessor.getQ(bandIndex);
 }
 
 void EqualizerNode::sliderValueChanged(juce::Slider* slider)
 {
-    updateProcessor();
-    updateMeters();
+    if (slider == &frequencySlider)
+        setFrequency(selectedBand, static_cast<float>(frequencySlider.getValue()));
+    else if (slider == &gainSlider)
+        setGain(selectedBand, static_cast<float>(gainSlider.getValue()));
+    else if (slider == &qSlider)
+        setQ(selectedBand, static_cast<float>(qSlider.getValue()));
+        
+    repaint();
 }
 
-void EqualizerNode::buttonClicked(juce::Button* button)
+void EqualizerNode::comboBoxChanged(juce::ComboBox* comboBox)
 {
-    if (button == bypassButton.get())
-        setBypassState(button->getToggleState());
-}
-
-void EqualizerNode::setBypassState(bool shouldBeBypassed)
-{
-    if (auto* proc = dynamic_cast<EqualizerProcessor*>(processor.get()))
+    if (comboBox == &typeSelector)
     {
-        proc->setBypassed(shouldBeBypassed);
+        int filterTypeId = typeSelector.getSelectedId() - 1;
+        setType(selectedBand, static_cast<EQProcessor::FilterType>(filterTypeId));
         repaint();
     }
 }
 
-void EqualizerNode::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
+void EqualizerNode::buttonClicked(juce::Button* button)
 {
-    if (auto* proc = dynamic_cast<EqualizerProcessor*>(processor.get()))
+    if (button == &helpButton)
     {
-        proc->processBlock(buffer, midiMessages);
+        showHelpPopup();
     }
-    
-    if (visualizer)
+    else
     {
-        auto* channelData = buffer.getReadPointer(0);
-        for (int i = 0; i < buffer.getNumSamples(); ++i)
+        // Check if it's one of our band buttons
+        for (int i = 0; i < bandButtons.size(); ++i)
         {
-            visualizer->pushSample(channelData[i], channelData[i]);
+            // Fix: Use -> instead of . for pointer access and remove get() call since bandButtons[i] already returns a pointer
+            if (button == bandButtons[i] && button->getToggleState())
+            {
+                setSelectedBand(i);
+                break;
+            }
         }
     }
 }
 
-void EqualizerNode::typeChanged()
+void EqualizerNode::setSelectedBand(int bandIndex)
 {
-    if (auto* proc = dynamic_cast<EqualizerProcessor*>(processor.get()))
+    if (bandIndex >= 0 && bandIndex < eqProcessor.getNumBands())
     {
-        auto type = static_cast<EQType>(typeSelector->getSelectedId() - 1);
-        proc->setFilterType(type);
-        updateParametersForType(type);
-        updateParameters();
+        selectedBand = bandIndex;
+        updateControls();
+        repaint();
     }
 }
 
-void EqualizerNode::updateParametersForType(EQType type)
+void EqualizerNode::updateControls()
 {
-    parameterSliders.clear();
+    // Update UI controls to reflect the current band settings
+    frequencySlider.setValue(eqProcessor.getFrequency(selectedBand), juce::dontSendNotification);
+    gainSlider.setValue(eqProcessor.getGain(selectedBand), juce::dontSendNotification);
+    qSlider.setValue(eqProcessor.getQ(selectedBand), juce::dontSendNotification);
+    typeSelector.setSelectedId(eqProcessor.getFilterType(selectedBand) + 1, juce::dontSendNotification);
+}
+
+void EqualizerNode::updateFilter()
+{
+    // In a real implementation, this would update the audio processing filter
+    // For the prototype, we'll just update the UI
+    repaint();
+}
+
+void EqualizerNode::showHelpPopup()
+{
+    // Create and show a popup explaining current filter settings
+    EQProcessor::FilterType currentType = eqProcessor.getFilterType(selectedBand);
+    juce::String message = "Filter Type: " + eqProcessor.getFilterTypeDescription(currentType) + "\n\n";
+    message += eqProcessor.getFrequencyDescription() + "\n\n";
+    message += eqProcessor.getQDescription() + "\n\n";
+    message += eqProcessor.getGainDescription();
     
-    // Common parameters
-    addParameter("Frequency", 20.0f, 20000.0f, 1000.0f);
-    
-    switch (type)
-    {
-        case EQType::Lowpass:
-        case EQType::Highpass:
-            addParameter("Slope", 6.0f, 48.0f, 12.0f);
-            addParameter("Q", 0.1f, 10.0f, 0.707f);
-            break;
-            
-        case EQType::Bandpass:
-        case EQType::Notch:
-            addParameter("Q", 0.1f, 10.0f, 1.0f);
-            break;
-            
-        case EQType::Peaking:
-            addParameter("Gain", -24.0f, 24.0f, 0.0f);
-            addParameter("Q", 0.1f, 10.0f, 1.0f);
-            break;
-    }
-    
-    for (auto* slider : parameterSliders)
-        slider->addListener(this);
-        
-    resized();
+    juce::AlertWindow::showMessageBoxAsync(juce::AlertWindow::InfoIcon,
+                                          "Equalizer Help",
+                                          message,
+                                          "OK");
 }
 
-void EqualizerNode::updateProcessor()
-{
-    if (auto* proc = dynamic_cast<EqualizerProcessor*>(processor.get()))
-    {
-        // Update all parameters using processor's parameter interface
-        for (auto* slider : parameterSliders)
-        {
-            const auto& name = slider->getName();
-            const auto value = slider->getValue();
-            
-            if (name == "Frequency")
-                proc->setParameter(0, value);
-            else if (name == "Gain")
-                proc->setParameter(1, value);
-            else if (name == "Q")
-                proc->setParameter(2, value);
-            // Remove slope parameter as it's not supported
-        }
-    }
-}
-
-void EqualizerNode::updateParameters()
-{
-    if (!visualizer || !processor)
-        return;
-        
-    if (auto* proc = dynamic_cast<EqualizerProcessor*>(processor.get()))
-    {
-        visualizer->setType(static_cast<EQType>(typeSelector->getSelectedId() - 1));
-        
-        // Update visualizer with current parameter values from sliders
-        for (auto* slider : parameterSliders)
-        {
-            const auto& name = slider->getName();
-            if (name == "Frequency")
-                visualizer->setFrequency(slider->getValue());
-            else if (name == "Gain")
-                visualizer->setGain(slider->getValue());
-            else if (name == "Q")
-                visualizer->setQ(slider->getValue());
-        }
-        
-        // Update level meters using available methods
-        visualizer->setInputLevel(proc->getInputLevel());
-        visualizer->setOutputLevel(proc->getOutputLevel());
-        
-        visualizer->repaint();
-    }
-}
-
-void EqualizerNode::updateMeters()
-{
-    if (!visualizer || !processor)
-        return;
-        
-    if (auto* proc = dynamic_cast<EqualizerProcessor*>(processor.get()))
-    {
-        // Update using meter values from processor
-        visualizer->setInputLevel(proc->getInputLevel());
-        visualizer->setOutputLevel(proc->getOutputLevel());
-        
-        // Update parameter display
-        for (auto* slider : parameterSliders)
-        {
-            const auto& name = slider->getName();
-            if (name == "Frequency")
-                visualizer->setFrequency(slider->getValue());
-            else if (name == "Gain")
-                visualizer->setGain(slider->getValue());
-            else if (name == "Q")
-                visualizer->setQ(slider->getValue());
-        }
-        
-        visualizer->repaint();
-    }
-}

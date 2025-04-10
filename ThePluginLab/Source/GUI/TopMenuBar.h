@@ -1,11 +1,16 @@
 #pragma once
 #include <JuceHeader.h>
+#include "../Common/Features.h"
 
+/**
+ * Top menu bar component with main menu and logo display
+ */
 class TopMenuBar : public juce::Component,
                   public juce::MenuBarModel
 {
 public:
     TopMenuBar();
+    ~TopMenuBar() override;
     
     // MenuBarModel implementation
     juce::StringArray getMenuBarNames() override;
@@ -27,9 +32,26 @@ public:
     std::function<void(bool)> onShowTips;
     
 private:
+    // Simple styled button for the top menu
+    class StyledButton : public juce::TextButton
+    {
+    public:
+        StyledButton(const juce::String& buttonText) : juce::TextButton(buttonText)
+        {
+            setColour(juce::TextButton::buttonColourId, juce::Colour(0xFF404040));
+            setColour(juce::TextButton::textColourOffId, juce::Colours::white);
+        }
+    };
+    
     std::unique_ptr<juce::MenuBarComponent> menuBar;
     juce::Image logo;
     bool tipsEnabled = false;
     
+    // Top menu buttons
+    StyledButton newButton{"New"};
+    StyledButton openButton{"Open"};
+    StyledButton saveButton{"Save"};
+    StyledButton exportButton{"Export"};
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TopMenuBar)
-}; 
+};

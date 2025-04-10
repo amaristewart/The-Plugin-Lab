@@ -1,364 +1,186 @@
 #include "CompressorProcessor.h"
 
 CompressorProcessor::CompressorProcessor()
-    : PluginAudioProcessor() // Call base class constructor
 {
-    // Initialize default compressor state
+    // Initialize the processor
+}
+
+CompressorProcessor::~CompressorProcessor()
+{
+    // Clean up resources
 }
 
 void CompressorProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    currentSampleRate = sampleRate;
+    // Prepare DSP chain
+    juce::dsp::ProcessSpec spec;
+    spec.sampleRate = sampleRate;
+    spec.maximumBlockSize = samplesPerBlock;
+    spec.numChannels = getTotalNumOutputChannels();
     
-    // Set up attack and release time constants based on sample rate
-    attackCoeff = std::exp(-1.0 / (attackTime * 0.001 * sampleRate));
-    releaseCoeff = std::exp(-1.0 / (releaseTime * 0.001 * sampleRate));
-
-    // Clear any previous state
-    envelopeLevel = 0.0f;
-    currentGainReduction = 0.0f;
-    holdCounter = 0;
-    maxHoldSamples = static_cast<int>(holdTime * 0.001 * sampleRate);
+    compressor.prepare(spec);
+    gain.prepare(spec);
+    
+    // Set initial parameters
+    compressor.setThreshold(threshold);
+    compressor.setRatio(ratio);
+    compressor.setAttack(attack);
+    compressor.setRelease(release);
+    gain.setGainDecibels(makeupGain);
 }
 
 void CompressorProcessor::releaseResources()
 {
-    // Free resources when audio device is stopped
+    // Release resources when no longer playing
 }
 
 void CompressorProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    if (bypassed)
-        return;
-
-    const int numChannels = buffer.getNumChannels();
-    const int numSamples = buffer.getNumSamples();
+    juce::ScopedNoDenormals noDenormals;
     
-    // Calculate input level for metering
-    float inputSum = 0.0f;
-    for (int channel = 0; channel < numChannels; ++channel)
+    // Make a copy of the buffer before compression to calculate gain reduction
+    juce::AudioBuffer<float> inputCopy;
+    inputCopy.makeCopyOf(buffer);
+    
+    // Process with the compressor and makeup gain
+    juce::dsp::AudioBlock<float> block(buffer);
+    juce::dsp::ProcessContextReplacing<float> context(block);
+    
+    compressor.process(context);
+    gain.process(context);
+    
+    // Manually calculate gain reduction by comparing before/after levels
+    float maxInputLevel = 0.0f;
+    float maxOutputLevel = 0.0f;
+    
+    for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
     {
-        auto* channelData = buffer.getReadPointer(channel);
-        for (int i = 0; i < numSamples; ++i)
+        for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
         {
-            inputSum += channelData[i] * channelData[i];
+            maxInputLevel = std::max(maxInputLevel, std::abs(inputCopy.getSample(channel, sample)));
+            maxOutputLevel = std::max(maxOutputLevel, std::abs(buffer.getSample(channel, sample)));
         }
     }
     
-    if (numSamples > 0 && numChannels > 0)
-    {
-        float rmsLevel = std::sqrt(inputSum / (numSamples * numChannels));
-        inputLevel.store(juce::Decibels::gainToDecibels(rmsLevel, -60.0f));
-    }
+    // Convert to dB
+    float inputLevelDb = maxInputLevel > 0.0f ? 20.0f * std::log10(maxInputLevel) : -100.0f;
+    float outputLevelDb = maxOutputLevel > 0.0f ? 20.0f * std::log10(maxOutputLevel) : -100.0f;
     
-    // Process dynamic range processing
-    switch (currentType)
-    {
-        case DynamicType::Compressor:
-            processCompressor(buffer);
-            break;
-            
-        case DynamicType::Limiter:
-            processLimiter(buffer);
-            break;
-            
-        case DynamicType::Expander:
-            processExpander(buffer);
-            break;
-            
-        case DynamicType::Gate:
-            processGate(buffer);
-            break;
-    }
+    // Calculate gain reduction (without makeup gain)
+    currentGainReduction = inputLevelDb - outputLevelDb + makeupGain;
     
-    // Calculate output level for metering
-    float outputSum = 0.0f;
-    for (int channel = 0; channel < numChannels; ++channel)
-    {
-        auto* channelData = buffer.getReadPointer(channel);
-        for (int i = 0; i < numSamples; ++i)
-        {
-            outputSum += channelData[i] * channelData[i];
-        }
-    }
-    
-    if (numSamples > 0 && numChannels > 0)
-    {
-        float rmsLevel = std::sqrt(outputSum / (numSamples * numChannels));
-        outputLevel.store(juce::Decibels::gainToDecibels(rmsLevel, -60.0f));
-    }
+    // Ensure gain reduction is positive (it's a reduction)
+    currentGainReduction = std::max(0.0f, currentGainReduction);
 }
 
-void CompressorProcessor::processCompressor(juce::AudioBuffer<float>& buffer)
+juce::AudioProcessorEditor* CompressorProcessor::createEditor()
 {
-    const int numChannels = buffer.getNumChannels();
-    const int numSamples = buffer.getNumSamples();
-    
-    const float thresholdLinear = juce::Decibels::decibelsToGain(threshold);
-    
-    for (int i = 0; i < numSamples; ++i)
-    {
-        // Find the maximum sample for all channels for this sample position
-        float inputSample = 0.0f;
-        for (int channel = 0; channel < numChannels; ++channel)
-        {
-            float sample = std::abs(buffer.getSample(channel, i));
-            inputSample = std::max(inputSample, sample);
-        }
-        
-        // Calculate envelope (smoothed abs value for detection)
-        if (inputSample > envelopeLevel)
-            envelopeLevel = attackCoeff * envelopeLevel + (1.0f - attackCoeff) * inputSample;
-        else
-            envelopeLevel = releaseCoeff * envelopeLevel + (1.0f - releaseCoeff) * inputSample;
-        
-        // Calculate gain reduction
-        float gainReduction = 1.0f;
-        if (envelopeLevel > thresholdLinear)
-        {
-            // Compressor formula: gain = threshold * (level/threshold)^(1/ratio - 1)
-            gainReduction = thresholdLinear * std::pow(envelopeLevel / thresholdLinear, 1.0f/ratio - 1.0f) / envelopeLevel;
-        }
-        
-        // Smooth gain reduction to avoid artifacts
-        const float alphaAttack = 0.9f;  // Smooth coefficient
-        currentGainReduction = alphaAttack * currentGainReduction + (1.0f - alphaAttack) * gainReduction;
-        
-        // Apply gain reduction to all channels
-        for (int channel = 0; channel < numChannels; ++channel)
-        {
-            float sample = buffer.getSample(channel, i);
-            buffer.setSample(channel, i, sample * currentGainReduction);
-        }
-    }
-    
-    // Store gain reduction for metering (in dB)
-    gainReduction.store(juce::Decibels::gainToDecibels(currentGainReduction));
+    return nullptr; // No custom editor for now
 }
 
-void CompressorProcessor::processLimiter(juce::AudioBuffer<float>& buffer)
+bool CompressorProcessor::hasEditor() const
 {
-    const int numChannels = buffer.getNumChannels();
-    const int numSamples = buffer.getNumSamples();
-    
-    const float thresholdLinear = juce::Decibels::decibelsToGain(threshold);
-    
-    for (int i = 0; i < numSamples; ++i)
-    {
-        // Find maximum sample across all channels
-        float maxSample = 0.0f;
-        for (int channel = 0; channel < numChannels; ++channel)
-        {
-            float sample = std::abs(buffer.getSample(channel, i));
-            maxSample = std::max(maxSample, sample);
-        }
-        
-        // Calculate envelope for peak detection
-        envelopeLevel = std::max(maxSample, releaseCoeff * envelopeLevel);
-        
-        // Calculate gain reduction for limiter (hard limiting)
-        float gainReduction = 1.0f;
-        if (envelopeLevel > thresholdLinear)
-            gainReduction = thresholdLinear / envelopeLevel;
-            
-        // Apply gain reduction to all channels
-        for (int channel = 0; channel < numChannels; ++channel)
-        {
-            float sample = buffer.getSample(channel, i);
-            buffer.setSample(channel, i, sample * gainReduction);
-        }
-        
-        // Update gain reduction for metering
-        currentGainReduction = gainReduction;
-    }
-    
-    // Store gain reduction for metering (in dB)
-    gainReduction.store(juce::Decibels::gainToDecibels(currentGainReduction));
+    return false;
 }
 
-void CompressorProcessor::processExpander(juce::AudioBuffer<float>& buffer)
+const juce::String CompressorProcessor::getName() const
 {
-    const int numChannels = buffer.getNumChannels();
-    const int numSamples = buffer.getNumSamples();
-    
-    const float thresholdLinear = juce::Decibels::decibelsToGain(threshold);
-    
-    for (int i = 0; i < numSamples; ++i)
-    {
-        // Find the maximum sample for all channels
-        float inputSample = 0.0f;
-        for (int channel = 0; channel < numChannels; ++channel)
-        {
-            float sample = std::abs(buffer.getSample(channel, i));
-            inputSample = std::max(inputSample, sample);
-        }
-        
-        // Calculate envelope (smoothed abs value)
-        if (inputSample > envelopeLevel)
-            envelopeLevel = attackCoeff * envelopeLevel + (1.0f - attackCoeff) * inputSample;
-        else
-            envelopeLevel = releaseCoeff * envelopeLevel + (1.0f - releaseCoeff) * inputSample;
-        
-        // Calculate gain reduction for expander
-        float gainReduction = 1.0f;
-        if (envelopeLevel < thresholdLinear)
-        {
-            // Expander formula inverts the compressor ratio relationship
-            gainReduction = std::pow(envelopeLevel / thresholdLinear, ratio - 1.0f);
-        }
-        
-        // Apply gain reduction to all channels
-        for (int channel = 0; channel < numChannels; ++channel)
-        {
-            float sample = buffer.getSample(channel, i);
-            buffer.setSample(channel, i, sample * gainReduction);
-        }
-        
-        // Update gain reduction for metering
-        currentGainReduction = gainReduction;
-    }
-    
-    // Store gain reduction for metering (in dB)
-    gainReduction.store(juce::Decibels::gainToDecibels(currentGainReduction));
+    return "Compressor";
 }
 
-void CompressorProcessor::processGate(juce::AudioBuffer<float>& buffer)
+int CompressorProcessor::getNumPrograms()
 {
-    const int numChannels = buffer.getNumChannels();
-    const int numSamples = buffer.getNumSamples();
-    
-    const float thresholdLinear = juce::Decibels::decibelsToGain(threshold);
-    
-    for (int i = 0; i < numSamples; ++i)
-    {
-        // Find the maximum sample for all channels
-        float inputSample = 0.0f;
-        for (int channel = 0; channel < numChannels; ++channel)
-        {
-            float sample = std::abs(buffer.getSample(channel, i));
-            inputSample = std::max(inputSample, sample);
-        }
-        
-        // Calculate envelope (smoothed abs value)
-        if (inputSample > envelopeLevel)
-            envelopeLevel = attackCoeff * envelopeLevel + (1.0f - attackCoeff) * inputSample;
-        else
-            envelopeLevel = releaseCoeff * envelopeLevel + (1.0f - releaseCoeff) * inputSample;
-        
-        // Calculate gate state
-        float gainReduction;
-        if (envelopeLevel >= thresholdLinear)
-        {
-            // Reset hold counter when signal is above threshold
-            holdCounter = maxHoldSamples;
-            gainReduction = 1.0f;  // Gate open
-        }
-        else
-        {
-            // Count down hold time
-            if (holdCounter > 0)
-            {
-                holdCounter--;
-                gainReduction = 1.0f;  // Gate still open during hold
-            }
-            else
-            {
-                gainReduction = 0.0f;  // Gate closed
-            }
-        }
-        
-        // Smooth gain changes to avoid clicks
-        currentGainReduction = 0.9f * currentGainReduction + 0.1f * gainReduction;
-        
-        // Apply gain reduction to all channels
-        for (int channel = 0; channel < numChannels; ++channel)
-        {
-            float sample = buffer.getSample(channel, i);
-            buffer.setSample(channel, i, sample * currentGainReduction);
-        }
-    }
-    
-    // Store gain reduction for metering (in dB)
-    gainReduction.store(juce::Decibels::gainToDecibels(currentGainReduction));
+    return 1;
+}
+
+int CompressorProcessor::getCurrentProgram()
+{
+    return 0;
+}
+
+void CompressorProcessor::setCurrentProgram(int index)
+{
+    // We only have one program
+}
+
+const juce::String CompressorProcessor::getProgramName(int index)
+{
+    return "Default";
+}
+
+void CompressorProcessor::changeProgramName(int index, const juce::String& newName)
+{
+    // Not implemented
 }
 
 void CompressorProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
+    // Store compressor parameters
     juce::MemoryOutputStream stream(destData, true);
     
     stream.writeFloat(threshold);
     stream.writeFloat(ratio);
-    stream.writeFloat(attackTime);
-    stream.writeFloat(releaseTime);
-    stream.writeFloat(holdTime);
-    stream.writeInt(static_cast<int>(currentType));
-    stream.writeBool(bypassed);
+    stream.writeFloat(attack);
+    stream.writeFloat(release);
+    stream.writeFloat(makeupGain);
 }
 
 void CompressorProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
+    // Restore compressor parameters
     juce::MemoryInputStream stream(data, static_cast<size_t>(sizeInBytes), false);
     
     threshold = stream.readFloat();
     ratio = stream.readFloat();
-    attackTime = stream.readFloat();
-    releaseTime = stream.readFloat();
-    holdTime = stream.readFloat();
-    currentType = static_cast<DynamicType>(stream.readInt());
-    bypassed = stream.readBool();
+    attack = stream.readFloat();
+    release = stream.readFloat();
+    makeupGain = stream.readFloat();
     
-    // Update derived parameters
-    if (currentSampleRate > 0)
-    {
-        attackCoeff = std::exp(-1.0 / (attackTime * 0.001 * currentSampleRate));
-        releaseCoeff = std::exp(-1.0 / (releaseTime * 0.001 * currentSampleRate));
-        maxHoldSamples = static_cast<int>(holdTime * 0.001 * currentSampleRate);
-    }
-}
-
-// Parameter setters
-void CompressorProcessor::setDynamicsType(DynamicType type)
-{
-    currentType = type;
+    // Update DSP parameters
+    compressor.setThreshold(threshold);
+    compressor.setRatio(ratio);
+    compressor.setAttack(attack);
+    compressor.setRelease(release);
+    gain.setGainDecibels(makeupGain);
 }
 
 void CompressorProcessor::setThreshold(float thresholdDb)
 {
     threshold = thresholdDb;
+    compressor.setThreshold(threshold);
 }
 
-void CompressorProcessor::setRatio(float r)
+void CompressorProcessor::setRatio(float newRatio)
 {
-    ratio = r;
+    ratio = newRatio;
+    compressor.setRatio(ratio);
 }
 
-void CompressorProcessor::setAttackTime(float attackMs)
+void CompressorProcessor::setAttack(float attackMs)
 {
-    attackTime = attackMs;
-    if (currentSampleRate > 0)
-        attackCoeff = std::exp(-1.0 / (attackTime * 0.001 * currentSampleRate));
+    attack = attackMs;
+    compressor.setAttack(attack);
 }
 
-void CompressorProcessor::setReleaseTime(float releaseMs)
+void CompressorProcessor::setRelease(float releaseMs)
 {
-    releaseTime = releaseMs;
-    if (currentSampleRate > 0)
-        releaseCoeff = std::exp(-1.0 / (releaseTime * 0.001 * currentSampleRate));
+    release = releaseMs;
+    compressor.setRelease(release);
 }
 
-void CompressorProcessor::setHoldTime(float holdMs)
+void CompressorProcessor::setMakeupGain(float gainDb)
 {
-    holdTime = holdMs;
-    if (currentSampleRate > 0)
-        maxHoldSamples = static_cast<int>(holdTime * 0.001 * currentSampleRate);
-}
-
-void CompressorProcessor::setBypassed(bool shouldBeBypassed)
-{
-    bypassed = shouldBeBypassed;
+    makeupGain = gainDb;
+    gain.setGainDecibels(makeupGain);
 }
 
 float CompressorProcessor::getGainReduction() const
 {
-    return -gainReduction.load();  // Return positive dB value for reduction
+    return currentGainReduction;
 }
+
+// MIDI handling methods
+bool CompressorProcessor::acceptsMidi() const { return false; }
+bool CompressorProcessor::producesMidi() const { return false; }
+bool CompressorProcessor::isMidiEffect() const { return false; }
+double CompressorProcessor::getTailLengthSeconds() const { return 0.0; }

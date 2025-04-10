@@ -1,158 +1,167 @@
 #pragma once
 #include <JuceHeader.h>
+#include <vector>
+#include <string>
 
+/**
+ * Represents a plugin project that can be exported
+ */
 class PluginProject
 {
 public:
-    struct NodeData
+    PluginProject()
     {
-        juce::String type;
-        juce::Point<int> position;
-        juce::ValueTree parameters;
-    };
+        // Default settings
+        name = "MyPlugin";
+        description = "A plugin created with The Plugin Lab";
+        manufacturer = "YourName";
+        pluginCode = "Plal";
+        manufacturerCode = "Yrmf";
+        version = "1.0.0";
+        formatFlags = 3; // VST3 + AU
+    }
     
-    struct ConnectionData
-    {
-        int sourceNodeIndex;
-        int sourcePortIndex;
-        int destNodeIndex;
-        int destPortIndex;
-    };
+    // Project metadata
+    juce::String name;
+    juce::String description;
+    juce::String manufacturer;
+    juce::String pluginCode;
+    juce::String manufacturerCode;
+    juce::String version;
+    int formatFlags;
     
-    PluginProject() = default;
+    // Plugin settings
+    bool isSynth = false;
+    bool needsMidiInput = false;
+    bool needsMidiOutput = false;
+    int numInputs = 2;
+    int numOutputs = 2;
     
+    // Plugin state
+    juce::MemoryBlock processorState;
+    
+    // Project management
     void clear()
     {
-        projectName = "Untitled Plugin";
-        nodes.clear();
-        connections.clear();
-        state = juce::ValueTree("PluginProject");
+        // Reset to default values
+        name = "MyPlugin";
+        description = "A plugin created with The Plugin Lab";
+        processorState.reset();
     }
     
-    bool saveToFile(const juce::File& file)
-    {
-        // Create project state
-        state = juce::ValueTree("PluginProject");
-        state.setProperty("name", projectName, nullptr);
-        state.setProperty("version", "1.0", nullptr);
-        
-        // Save nodes
-        auto nodesState = state.getOrCreateChildWithName("Nodes", nullptr);
-        for (const auto& node : nodes)
-        {
-            auto nodeState = juce::ValueTree("Node");
-            nodeState.setProperty("type", node.type, nullptr);
-            nodeState.setProperty("x", node.position.x, nullptr);
-            nodeState.setProperty("y", node.position.y, nullptr);
-            nodeState.addChild(node.parameters.createCopy(), -1, nullptr);
-            nodesState.addChild(nodeState, -1, nullptr);
-        }
-        
-        // Save connections
-        auto connectionsState = state.getOrCreateChildWithName("Connections", nullptr);
-        for (const auto& connection : connections)
-        {
-            auto connectionState = juce::ValueTree("Connection");
-            connectionState.setProperty("sourceNode", connection.sourceNodeIndex, nullptr);
-            connectionState.setProperty("sourcePort", connection.sourcePortIndex, nullptr);
-            connectionState.setProperty("destNode", connection.destNodeIndex, nullptr);
-            connectionState.setProperty("destPort", connection.destPortIndex, nullptr);
-            connectionsState.addChild(connectionState, -1, nullptr);
-        }
-        
-        // Write to file
-        if (auto xml = state.createXml())
-            return xml->writeTo(file);
-        return false;
-    }
+    juce::String getName() const { return name; }
     
-    bool loadFromFile(const juce::File& file)
-    {
-        if (auto xml = juce::XmlDocument::parse(file))
-        {
-            state = juce::ValueTree::fromXml(*xml);
-            
-            if (state.hasType("PluginProject"))
-            {
-                clear();
-                projectName = state.getProperty("name", "Untitled Plugin");
-                
-                // Load nodes
-                auto nodesState = state.getChildWithName("Nodes");
-                for (int i = 0; i < nodesState.getNumChildren(); ++i)
-                {
-                    auto nodeState = nodesState.getChild(i);
-                    NodeData node;
-                    node.type = nodeState.getProperty("type");
-                    node.position.x = nodeState.getProperty("x");
-                    node.position.y = nodeState.getProperty("y");
-                    node.parameters = nodeState.getChild(0).createCopy();
-                    nodes.add(node);
-                }
-                
-                // Load connections
-                auto connectionsState = state.getChildWithName("Connections");
-                for (int i = 0; i < connectionsState.getNumChildren(); ++i)
-                {
-                    auto connectionState = connectionsState.getChild(i);
-                    ConnectionData connection;
-                    connection.sourceNodeIndex = connectionState.getProperty("sourceNode");
-                    connection.sourcePortIndex = connectionState.getProperty("sourcePort");
-                    connection.destNodeIndex = connectionState.getProperty("destNode");
-                    connection.destPortIndex = connectionState.getProperty("destPort");
-                    connections.add(connection);
-                }
-                
-                return true;
-            }
-        }
-        return false;
-    }
-    
+    // Template loading
     bool loadTemplate(const juce::String& templateName)
     {
-        // Load built-in templates from BinaryData
+        // Load a predefined template
         if (templateName == "Basic EQ")
-            return loadFromData(BinaryData::BasicEQ_xml, BinaryData::BasicEQ_xmlSize);
-        else if (templateName == "Basic Compressor")
-            return loadFromData(BinaryData::BasicCompressor_xml, BinaryData::BasicCompressor_xmlSize);
-        // Temporarily remove Multi-band EQ until we add the resource
-        // else if (templateName == "Multi-band EQ")
-        //     return loadFromData(BinaryData::MultibandEQ_xml, BinaryData::MultibandEQ_xmlSize);
-            
-        return false;
-    }
-    
-    const juce::String& getName() const { return projectName; }
-    void setName(const juce::String& name) { projectName = name; }
-    
-    juce::Array<NodeData>& getNodes() { return nodes; }
-    juce::Array<ConnectionData>& getConnections() { return connections; }
-    
-    void setProcessorState(const juce::MemoryBlock& state)
-    {
-        processorState = state;
-    }
-    
-    const juce::MemoryBlock& getProcessorState() const
-    {
-        return processorState;
-    }
-    
-private:
-    bool loadFromData(const void* data, size_t dataSize)
-    {
-        if (auto xml = juce::XmlDocument::parse(juce::String::createStringFromData(data, (int)dataSize)))
         {
-            state = juce::ValueTree::fromXml(*xml);
-            return state.hasType("PluginProject");
+            name = "Basic EQ";
+            description = "A simple equalizer plugin";
+            return true;
         }
+        else if (templateName == "Basic Compressor")
+        {
+            name = "Basic Compressor";
+            description = "A simple compressor plugin";
+            return true;
+        }
+        
         return false;
     }
     
-    juce::String projectName = "Untitled Plugin";
-    juce::Array<NodeData> nodes;
-    juce::Array<ConnectionData> connections;
-    juce::ValueTree state{"PluginProject"};
-    juce::MemoryBlock processorState;
+    // Save to JSON file
+    bool saveToFile(const juce::File& file) 
+    {
+        auto projectObject = new juce::DynamicObject();
+        
+        // Metadata
+        projectObject->setProperty("name", name);
+        projectObject->setProperty("description", description);
+        projectObject->setProperty("manufacturer", manufacturer);
+        projectObject->setProperty("pluginCode", pluginCode);
+        projectObject->setProperty("manufacturerCode", manufacturerCode);
+        projectObject->setProperty("version", version);
+        projectObject->setProperty("formatFlags", formatFlags);
+        
+        // Plugin settings
+        projectObject->setProperty("isSynth", isSynth);
+        projectObject->setProperty("needsMidiInput", needsMidiInput);
+        projectObject->setProperty("needsMidiOutput", needsMidiOutput);
+        projectObject->setProperty("numInputs", numInputs);
+        projectObject->setProperty("numOutputs", numOutputs);
+        
+        // Processor state
+        if (processorState.getSize() > 0)
+            projectObject->setProperty("processorState", processorState.toBase64Encoding());
+        
+        juce::var projectVar(projectObject);
+        juce::String jsonString = juce::JSON::toString(projectVar);
+        
+        if (file.replaceWithText(jsonString))
+            return true;
+        
+        return false;
+    }
+    
+    // Load from JSON file
+    bool loadFromFile(const juce::File& file)
+    {
+        if (!file.exists())
+            return false;
+            
+        juce::String jsonContent = file.loadFileAsString();
+        auto result = juce::JSON::parse(jsonContent);
+        
+        if (result.isObject())
+        {
+            auto obj = result.getDynamicObject();
+            
+            // Metadata
+            if (obj->hasProperty("name")) name = obj->getProperty("name").toString();
+            if (obj->hasProperty("description")) description = obj->getProperty("description").toString();
+            if (obj->hasProperty("manufacturer")) manufacturer = obj->getProperty("manufacturer").toString();
+            if (obj->hasProperty("pluginCode")) pluginCode = obj->getProperty("pluginCode").toString();
+            if (obj->hasProperty("manufacturerCode")) manufacturerCode = obj->getProperty("manufacturerCode").toString();
+            if (obj->hasProperty("version")) version = obj->getProperty("version").toString();
+            if (obj->hasProperty("formatFlags")) formatFlags = obj->getProperty("formatFlags");
+            
+            // Plugin settings
+            if (obj->hasProperty("isSynth")) isSynth = obj->getProperty("isSynth");
+            if (obj->hasProperty("needsMidiInput")) needsMidiInput = obj->getProperty("needsMidiInput");
+            if (obj->hasProperty("needsMidiOutput")) needsMidiOutput = obj->getProperty("needsMidiOutput");
+            if (obj->hasProperty("numInputs")) numInputs = obj->getProperty("numInputs");
+            if (obj->hasProperty("numOutputs")) numOutputs = obj->getProperty("numOutputs");
+            
+            // Processor state
+            if (obj->hasProperty("processorState"))
+            {
+                juce::String stateBase64 = obj->getProperty("processorState").toString();
+                processorState.fromBase64Encoding(stateBase64);
+            }
+            
+            return true;
+        }
+        
+        return false;
+    }
+    
+    // Getters and setters for processor state
+    juce::MemoryBlock getProcessorState() const { return processorState; }
+    void setProcessorState(const juce::MemoryBlock& state) { processorState = state; }
+    
+    // Generate JUCE project files
+    bool generateProjectFiles(const juce::File& directory)
+    {
+        // Implementation would generate Projucer files or CMake files
+        return false; // Placeholder
+    }
+    
+    // Export compiled plugin
+    bool exportPlugin(const juce::File& destinationDirectory, const juce::Array<int>& formats)
+    {
+        // Implementation would build and package the plugin
+        return false; // Placeholder
+    }
 };

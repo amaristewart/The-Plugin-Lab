@@ -20,6 +20,7 @@
     </GROUP>
     <GROUP id="{C35F9EDA-B525-B677-A191-4BDDBFCAAE6E}" name="Source"/>
     <GROUP id="{6C289D73-F928-6C73-4BE4-641EA046383D}" name="Audio">
+      <FILE id="GMPkNI" name="AudioPort.cpp" compile="1" resource="0" file="Source/Audio/AudioPort.cpp"/>
       <FILE id="daMpWr" name="AudioPort.h" compile="0" resource="0" file="Source/Audio/AudioPort.h"/>
       <GROUP id="{E84F908B-4B5E-317A-4992-8E06603C4814}" name="Graphs">
         <FILE id="A5qL8m" name="AudioProcessingGraph.cpp" compile="1" resource="0"
@@ -32,20 +33,30 @@
               file="Source/Audio/Processors/CompressorProcessor.cpp"/>
         <FILE id="p5ykBr" name="CompressorProcessor.h" compile="0" resource="0"
               file="Source/Audio/Processors/CompressorProcessor.h"/>
-        <FILE id="rgMQkv" name="EqualizerProcessor.cpp" compile="1" resource="0"
-              file="Source/Audio/Processors/EqualizerProcessor.cpp"/>
-        <FILE id="tyNkwh" name="EqualizerProcessor.h" compile="0" resource="0"
-              file="Source/Audio/Processors/EqualizerProcessor.h"/>
+        <FILE id="QkE95u" name="EQProcessor.cpp" compile="1" resource="0" file="Source/Audio/Processors/EQProcessor.cpp"/>
+        <FILE id="XHKMJL" name="EQProcessor.h" compile="0" resource="0" file="Source/Audio/Processors/EQProcessor.h"/>
+        <FILE id="bcoRin" name="GuiControlAudioProcessor.cpp" compile="1" resource="0"
+              file="Source/Audio/Processors/GuiControlAudioProcessor.cpp"/>
+        <FILE id="RaesRT" name="GuiControlAudioProcessor.h" compile="0" resource="0"
+              file="Source/Audio/Processors/GuiControlAudioProcessor.h"/>
         <FILE id="LQAbjT" name="PluginAudioProcessor.h" compile="0" resource="0"
               file="Source/Audio/Processors/PluginAudioProcessor.h"/>
       </GROUP>
     </GROUP>
     <GROUP id="{77F971E2-136D-9CC2-DEDF-9269D41CF620}" name="Common">
+      <FILE id="dGvsWq" name="ExceptionHandler.h" compile="0" resource="0"
+            file="Source/Common/ExceptionHandler.h"/>
       <FILE id="nXHvgR" name="Features.h" compile="0" resource="0" file="Source/Common/Features.h"/>
       <FILE id="AgoeK9" name="Forward.h" compile="0" resource="0" file="Source/Common/Forward.h"/>
+      <FILE id="fEWTmF" name="Helpers.h" compile="0" resource="0" file="Source/Common/Helpers.h"/>
       <FILE id="mLt3Hz" name="Types.h" compile="0" resource="0" file="Source/Common/Types.h"/>
+      <FILE id="How6H2" name="WeakReference.h" compile="0" resource="0" file="Source/Common/WeakReference.h"/>
     </GROUP>
     <GROUP id="{B5CED22C-01F3-2C17-24E1-BFB94400C48F}" name="Components">
+      <FILE id="DCjjzO" name="ConcretePluginNode.cpp" compile="1" resource="0"
+            file="Source/Components/ConcretePluginNode.cpp"/>
+      <FILE id="NPRY6N" name="ConcretePluginNode.h" compile="0" resource="0"
+            file="Source/Components/ConcretePluginNode.h"/>
       <FILE id="v3K0FM" name="ConnectionComponent.cpp" compile="1" resource="0"
             file="Source/Components/ConnectionComponent.cpp"/>
       <FILE id="DJ5yog" name="ConnectionComponent.h" compile="0" resource="0"
@@ -75,6 +86,8 @@
       <FILE id="y1esYE" name="PluginProject.h" compile="0" resource="0" file="Source/Export/PluginProject.h"/>
     </GROUP>
     <GROUP id="{50B7C2EC-F797-7AC6-4BDF-C2EA6A50A2BD}" name="GUI">
+      <FILE id="uQQdSz" name="AnimationHelper.h" compile="0" resource="0"
+            file="Source/GUI/AnimationHelper.h"/>
       <FILE id="sODhw7" name="ComponentPanel.cpp" compile="1" resource="0"
             file="Source/GUI/ComponentPanel.cpp"/>
       <FILE id="aMZhlr" name="ComponentPanel.h" compile="0" resource="0"
@@ -85,11 +98,17 @@
             file="Source/GUI/PluginEditorCanvas.cpp"/>
       <FILE id="FOUnon" name="PluginEditorCanvas.h" compile="0" resource="0"
             file="Source/GUI/PluginEditorCanvas.h"/>
+      <FILE id="hKYDBh" name="PluginEditorCanvasDragDrop.cpp" compile="1"
+            resource="0" file="Source/GUI/PluginEditorCanvasDragDrop.cpp"/>
       <FILE id="z6MBgC" name="PluginToolbar.cpp" compile="1" resource="0"
             file="Source/GUI/PluginToolbar.cpp"/>
       <FILE id="Ujujy0" name="PluginToolbar.h" compile="0" resource="0" file="Source/GUI/PluginToolbar.h"/>
+      <FILE id="cSvyzg" name="ToolPalette.cpp" compile="1" resource="0" file="Source/GUI/ToolPalette.cpp"/>
+      <FILE id="NNXBHd" name="ToolPalette.h" compile="0" resource="0" file="Source/GUI/ToolPalette.h"/>
       <FILE id="bAtEA9" name="TopMenuBar.cpp" compile="1" resource="0" file="Source/GUI/TopMenuBar.cpp"/>
       <FILE id="NHJ8hH" name="TopMenuBar.h" compile="0" resource="0" file="Source/GUI/TopMenuBar.h"/>
+      <FILE id="wUVh4D" name="TutorialHelper.h" compile="0" resource="0"
+            file="Source/GUI/TutorialHelper.h"/>
       <FILE id="qsPElI" name="TutorialSystem.h" compile="0" resource="0"
             file="Source/GUI/TutorialSystem.h"/>
     </GROUP>
@@ -107,12 +126,16 @@
       <FILE id="Va8zOG" name="EqualizerNode.h" compile="0" resource="0" file="Source/Nodes/EqualizerNode.h"/>
       <FILE id="eQUzTN" name="GuiNode.cpp" compile="1" resource="0" file="Source/Nodes/GuiNode.cpp"/>
       <FILE id="Qp7295" name="GuiNode.h" compile="0" resource="0" file="Source/Nodes/GuiNode.h"/>
+      <FILE id="PBHz7G" name="NodeFactory.cpp" compile="1" resource="0" file="Source/Nodes/NodeFactory.cpp"/>
+      <FILE id="IaSZJg" name="NodeFactory.h" compile="0" resource="0" file="Source/Nodes/NodeFactory.h"/>
     </GROUP>
     <GROUP id="{379C1B46-7862-B3C5-2FA9-CBC9A1739731}" name="Visualizers">
       <FILE id="vZqIgP" name="AudioVisualizer.cpp" compile="1" resource="0"
             file="Source/Visualizers/AudioVisualizer.cpp"/>
       <FILE id="kLSIUr" name="AudioVisualizer.h" compile="0" resource="0"
             file="Source/Visualizers/AudioVisualizer.h"/>
+      <FILE id="NUZcAO" name="BaseVisualizer.h" compile="0" resource="0"
+            file="Source/Visualizers/BaseVisualizer.h"/>
       <FILE id="ktvgY4" name="CompressorVisualizer.cpp" compile="1" resource="0"
             file="Source/Visualizers/CompressorVisualizer.cpp"/>
       <FILE id="OvxNBe" name="CompressorVisualizer.h" compile="0" resource="0"

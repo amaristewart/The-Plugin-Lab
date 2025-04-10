@@ -1,10 +1,17 @@
 #pragma once
 #include <JuceHeader.h>
+#include "Forward.h"
 
-// Forward declare DraggableComponent to avoid circular dependencies
-class DraggableComponent;
+// Enum for node types
+enum class NodeType
+{
+    Generic,
+    Equalizer,
+    Compressor,
+    GuiControl
+};
 
-// Component types
+// Enum for component types
 enum class ComponentType
 {
     // GUI Components
@@ -19,87 +26,90 @@ enum class ComponentType
     EQBandpass,
     EQNotch,
     EQPeaking,
-    EQFrequency,
-    EQGain,
-    EQQ,
-    EQSlope,
     
-    // Dynamics Components
+    // Compressor Components
     DynamicType,
     CompThreshold,
     CompRatio,
     CompAttack,
-    CompRelease,
-    
-    // Misc
-    Bypass
+    CompRelease
 };
 
-enum class DynamicType
-{
-    Compressor,
-    Limiter,
-    Expander,
-    Gate
-};
-
-enum class EQType
-{
-    Lowpass,
-    Highpass,
-    Bandpass,
-    Notch,
-    Peaking
-};
-
-enum class NodeType
-{
-    Input,
-    Output,
-    Equalizer,
-    Compressor,
-    CompThreshold,
-    CompRatio,
-    CompAttack,
-    CompRelease,
-    Delay,
-    Reverb,
-    GUI,
-    Knob,
-    Slider,
-    Button,
-    Label,
-    Unknown
-};
-
+// Connection point types
 enum class ConnectionPointType
 {
     Input,
     Output
 };
 
+// EQ filter types
+enum class EQType
+{
+    Lowpass,
+    Highpass,
+    Bandpass,
+    Notch,
+    Peaking,
+    LowShelf,
+    HighShelf
+};
+
+// Dynamic processor types
+enum class DynamicType
+{
+    Linear,
+    Logarithmic,
+    Exponential,
+    Compressor,
+    Limiter,
+    Expander,
+    Gate
+};
+
+// Structs and other type definitions
+struct PluginInfo
+{
+    juce::String name;
+    juce::String type;
+    juce::String manufacturer;
+    
+    bool operator==(const PluginInfo& other) const
+    {
+        return name == other.name && 
+               type == other.type && 
+               manufacturer == other.manufacturer;
+    }
+};
+
+// Useful type aliases
+using PluginInfoList = std::vector<PluginInfo>;
+
+// Convert component type to appropriate node type
 inline NodeType componentTypeToNodeType(ComponentType type)
 {
     switch (type)
     {
-        case ComponentType::Knob: return NodeType::Knob;
-        case ComponentType::Slider: return NodeType::Slider;
-        case ComponentType::Button: return NodeType::Button;
-        case ComponentType::Label: return NodeType::Label;
-        case ComponentType::EQLowpass: return NodeType::Equalizer;
-        case ComponentType::EQHighpass: return NodeType::Equalizer;
-        case ComponentType::EQBandpass: return NodeType::Equalizer;
-        case ComponentType::EQNotch: return NodeType::Equalizer;
-        case ComponentType::EQPeaking: return NodeType::Equalizer;
-        case ComponentType::EQFrequency: return NodeType::Equalizer;
-        case ComponentType::EQGain: return NodeType::Equalizer;
-        case ComponentType::EQQ: return NodeType::Equalizer;
-        case ComponentType::EQSlope: return NodeType::Equalizer;
-        case ComponentType::DynamicType: return NodeType::Compressor;
-        case ComponentType::CompThreshold: return NodeType::CompThreshold;
-        case ComponentType::CompRatio: return NodeType::CompRatio;
-        case ComponentType::CompAttack: return NodeType::CompAttack;
-        case ComponentType::CompRelease: return NodeType::CompRelease;
-        default: return NodeType::Unknown;
+        case ComponentType::Knob:
+        case ComponentType::Slider:
+        case ComponentType::Button:
+        case ComponentType::Label:
+            return NodeType::GuiControl;
+            
+        case ComponentType::EQLowpass:
+        case ComponentType::EQHighpass:
+        case ComponentType::EQBandpass:
+        case ComponentType::EQNotch:
+        case ComponentType::EQPeaking:
+            return NodeType::Equalizer;
+            
+        case ComponentType::DynamicType:
+        case ComponentType::CompThreshold:
+        case ComponentType::CompRatio:
+        case ComponentType::CompAttack:
+        case ComponentType::CompRelease:
+            return NodeType::Compressor;
+            
+        default:
+            return NodeType::Generic;
     }
 }

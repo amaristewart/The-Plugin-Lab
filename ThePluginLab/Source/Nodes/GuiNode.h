@@ -1,28 +1,60 @@
 #pragma once
 #include <JuceHeader.h>
 #include "../Components/PluginNodeComponent.h"
+#include "../Connections/AudioConnectionPoint.h"
 
+// Forward declarations
+class AudioConnectionPoint;
+
+/**
+ * GUI node component
+ */
 class GuiNode : public PluginNodeComponent
 {
 public:
-    GuiNode(ComponentType type);
-    ~GuiNode() override = default;
+    // Default constructor without ComponentType parameter
+    GuiNode();
+    ~GuiNode();
     
-    NodeType getType() const override { return NodeType::GUI; }
-    juce::AudioProcessor* getProcessor() override { return nullptr; }
+    // Type and processor implementations
+    NodeType getType() const override;
+    juce::AudioProcessor* getProcessor() override;
     
+    // Connection point implementations
+    void addInputPort(const juce::String& name) override;
+    void addOutputPort(const juce::String& name) override;
+    
+    // Port accessor implementations
+    AudioConnectionPoint* getInputPort(int index) const override;
+    AudioConnectionPoint* getOutputPort(int index) const override;
+    
+    // GUI specific methods
+    void setControlType(int controlType);
+    int getControlType() const;
+    
+    // Value handling
+    void setValue(float value);
+    float getValue() const;
+    
+    // Setup and component methods
+    void setupNode();
+    
+    // Override Component methods
     void resized() override;
     void paint(juce::Graphics& g) override;
     
 private:
-    void setupForType();
-    void addKnob();
-    void addSlider();
-    void addButton();
-    void addLabel();
+    // GUI node specific data
+    std::unique_ptr<juce::AudioProcessor> processor;
+    juce::OwnedArray<AudioConnectionPoint> inputPorts;
+    juce::OwnedArray<AudioConnectionPoint> outputPorts;
     
-    ComponentType componentType;
-    std::unique_ptr<juce::Component> control;
+    // GUI components
+    juce::Slider valueSlider;
+    
+    // Control parameters
+    int controlType;
+    float value;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(GuiNode)
 };

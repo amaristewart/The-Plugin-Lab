@@ -1,71 +1,92 @@
 #pragma once
 #include <JuceHeader.h>
-#include "../Common/Forward.h"
-#include "../Nodes/EqualizerNode.h"
-#include "../Nodes/CompressorNode.h"
-#include "../Export/PluginProject.h"
-#include <memory>
-#include <functional>
+#include "../Common/Types.h"
+#include "../Common/Features.h"
 
+// Forward declarations to avoid circular dependencies
+class AudioConnectionPoint;
+class ConnectionComponent;
+class PluginNodeComponent;
+class ConcretePluginNode;
+class GuiNode;
+class EqualizerNode;
+class CompressorNode;
+class AudioProcessingGraph;
+
+/**
+ * Main canvas for editing plugin components
+ */
 class PluginEditorCanvas : public juce::Component,
-                          public juce::DragAndDropContainer,
-                          public juce::DragAndDropTarget
+                         public juce::DragAndDropTarget
 {
 public:
     PluginEditorCanvas();
     ~PluginEditorCanvas() override;
-
-    void paint(juce::Graphics&) override;
+    
+    // Component overrides
+    void paint(juce::Graphics& g) override;
     void resized() override;
     
     // Node management
-    void addNode(std::unique_ptr<PluginNodeComponent> node);
-    void removeNode(PluginNodeComponent* node);
+    void addNode(std::unique_ptr<ConcretePluginNode> node);
+    void removeNode(ConcretePluginNode* node);
     
     // Connection management
     void addConnection(AudioConnectionPoint* source, AudioConnectionPoint* destination);
     void removeConnection(ConnectionComponent* connection);
     
-    // Project management
-    void clear();
-    void saveToProject(PluginProject& project);
-    void loadFromProject(const PluginProject& project);
+    // Connection dragging handlers
+    void startConnectionDrag(AudioConnectionPoint* startPoint);
+    void dragConnection(AudioConnectionPoint* source, const juce::Point<float>& mousePos);
+    void endConnectionDrag();
+    void updateConnectionsForPort(AudioConnectionPoint* port);
+    AudioConnectionPoint* findPortAt(const juce::Point<int>& screenPosition, const AudioConnectionPoint* excludePort = nullptr);
+    void disconnectPort(AudioConnectionPoint* port);
     
-    // DragAndDropTarget implementation
-    bool isInterestedInDragSource(const juce::DragAndDropTarget::SourceDetails& details) override
-    {
-        if (auto* obj = details.description.getDynamicObject())
-        {
-            return obj->hasProperty("type");
-        }
-        return false;
-    }
-    void itemDropped(const juce::DragAndDropTarget::SourceDetails& dragSourceDetails) override;
-
-    // Callback types
+    // Project management
+    void saveToProject(juce::ValueTree& projectData);
+    void loadFromProject(const juce::ValueTree& projectData);
+    void clear();
+    
+    // DragAndDropTarget interface
+    bool isInterestedInDragSource(const juce::DragAndDropTarget::SourceDetails& details) override;
+    void itemDragEnter(const juce::DragAndDropTarget::SourceDetails& dragSourceDetails) override;
+    void itemDragMove(const juce::DragAndDropTarget::SourceDetails& dragSourceDetails) override;
+    void itemDragExit(const juce::DragAndDropTarget::SourceDetails& dragSourceDetails) override;
+    void itemDropped(const juce::DragAndDropTarget::SourceDetails& details) override;
+    
+    // Callbacks for node and connection events
     std::function<void(PluginNodeComponent*)> onNodeAdded;
     std::function<void(PluginNodeComponent*)> onNodeRemoved;
     std::function<void(AudioConnectionPoint*, AudioConnectionPoint*)> onConnectionMade;
     std::function<void(ConnectionComponent*)> onConnectionRemoved;
-
-    void updateAllConnections();
-
-    // Drag line visualization
-    void updateDragLine(const juce::Point<float>& newPosition);
-    void clearDragLine();
-
+    
+    // Access to the audio processing graph
+    AudioProcessingGraph* getProcessingGraph() { return processingGraph.get(); }
+    
 private:
-    // Helper functions
-    std::unique_ptr<PluginNodeComponent> createNodeFromType(const juce::String& type);
-    juce::String getNodeTypeName(NodeType type);
-
-    juce::OwnedArray<PluginNodeComponent> nodes;
+    // Helper method
+    void drawGrid(juce::Graphics& g, int gridSize);
+    
+    // Nodes
+    juce::OwnedArray<ConcretePluginNode> nodes;
+    juce::OwnedArray<GuiNode> guiNodes;
+    juce::OwnedArray<EqualizerNode> eqNodes;
+    juce::OwnedArray<CompressorNode> compressorNodes;
+    
+    // Connections
     juce::OwnedArray<ConnectionComponent> connections;
     
-    // Drag line states
+    // Connection drag state
     bool isDraggingConnection = false;
-    juce::Point<float> dragLineStart;
-    juce::Point<float> dragLineEnd;
+    AudioConnectionPoint* selectedSource = nullptr;
+    juce::Point<float> dragEndPoint;
+    
+    // Audio processing graph
+    std::unique_ptr<AudioProcessingGraph> processingGraph;
+    
+    // UI state
+    bool showTutorialOverlay = true;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginEditorCanvas)
 };

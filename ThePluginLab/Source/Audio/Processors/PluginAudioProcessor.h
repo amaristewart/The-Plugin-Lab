@@ -1,40 +1,59 @@
 #pragma once
 #include <JuceHeader.h>
 
+/**
+ * A very simple audio processor that just routes audio through
+ * Used for non-processing GUI nodes
+ */
 class PluginAudioProcessor : public juce::AudioProcessor
 {
 public:
     PluginAudioProcessor()
+        : AudioProcessor(BusesProperties()
+                        .withInput("Input", juce::AudioChannelSet::stereo(), true)
+                        .withOutput("Output", juce::AudioChannelSet::stereo(), true))
     {
-        // Initialize processor state
     }
     
-    virtual ~PluginAudioProcessor() = default;
+    ~PluginAudioProcessor() override {}
     
-    // Create a default implementation for AudioProcessor methods
+    // AudioProcessor overrides - minimal implementation
+    void prepareToPlay(double sampleRate, int maximumExpectedSamplesPerBlock) override 
+    { 
+        // Nothing to do - this processor just passes audio through
+    }
+    
+    void releaseResources() override {}
+    
+    void processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) override
+    {
+        // Pass audio through unchanged
+        // The buffer already contains the input, so we do nothing
+        juce::ScopedNoDenormals noDenormals;
+    }
+    
+    // Editor and name
     juce::AudioProcessorEditor* createEditor() override { return nullptr; }
     bool hasEditor() const override { return false; }
+    const juce::String getName() const override { return "Plugin Audio Processor"; }
     
+    // MIDI handling
+    bool acceptsMidi() const override { return false; }
+    bool producesMidi() const override { return false; }
+    bool isMidiEffect() const override { return false; }
+    double getTailLengthSeconds() const override { return 0.0; }
+    
+    // Program handling
     int getNumPrograms() override { return 1; }
     int getCurrentProgram() override { return 0; }
-    void setCurrentProgram(int index) override {}
-    const juce::String getProgramName(int index) override { return "Default"; }
-    void changeProgramName(int index, const juce::String& newName) override {}
+    void setCurrentProgram(int) override {}
+    const juce::String getProgramName(int) override { return {}; }
+    void changeProgramName(int, const juce::String&) override {}
     
-    bool isMidiEffect() const override { return false; }
+    // State handling
+    void getStateInformation(juce::MemoryBlock&) override {}
+    void setStateInformation(const void*, int) override {}
     
-    // Add common methods for our plugin processors
-    void setBypassed(bool shouldBeBypassed) { bypassed = shouldBeBypassed; }
-    bool isBypassed() const { return bypassed; }
-    
-    // Add level tracking methods
-    float getInputLevel() const { return inputLevel.load(); }
-    float getOutputLevel() const { return outputLevel.load(); }
-    
-protected:
-    bool bypassed = false;
-    std::atomic<float> inputLevel{-60.0f};
-    std::atomic<float> outputLevel{-60.0f};
-    
+private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginAudioProcessor)
 };

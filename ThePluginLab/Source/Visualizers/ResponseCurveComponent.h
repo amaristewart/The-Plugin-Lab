@@ -1,5 +1,6 @@
 #pragma once
 #include <JuceHeader.h>
+#include "../Nodes/EqualizerNode.h"
 
 class EqualizerNode;
 

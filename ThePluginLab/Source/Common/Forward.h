@@ -1,23 +1,50 @@
 #pragma once
-#include "Types.h"
 
-// Forward declarations
-class MainComponent;
+// Forward declare all major classes that might be involved in circular dependencies
+
+// Components
 class PluginNodeComponent;
-class PluginEditorCanvas;
-class EqualizerNode;
-class CompressorNode;
+class ConcretePluginNode;
 class AudioConnectionPoint;
 class ConnectionComponent;
-class PluginAudioProcessor;
-class AudioProcessingGraph;
-class PluginToolbar;
-class AudioVisualizer;
-class PluginProject;
+class DraggableComponent;
 
-// Enums
+// Nodes
+class EqualizerNode;
+class CompressorNode;
+class GuiNode;
+
+// GUI
+class PluginEditorCanvas;
+class ComponentPanel;
+class ToolPalette;
+class MainLayout;
+class TopMenuBar;
+class PluginToolbar;
+
+// Audio
+class AudioProcessingGraph;
+class PluginAudioProcessor;
+
+// Misc
+class PluginProject;
+class PluginExporter;
+
+// Forward declarations of all key types to avoid circular dependencies
+namespace juce {
+    class Component;
+    class DragAndDropTarget;
+    class AudioProcessor;
+}
+
+// IMPORTANT: Remove enum forward declarations - these are fully defined in Types.h
+// Keeping PortType since it doesn't conflict
 enum class PortType
 {
-    Input,
-    Output
+    AudioInput,
+    AudioOutput,
+    MidiInput,
+    MidiOutput,
+    ControlInput,
+    ControlOutput
 };

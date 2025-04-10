@@ -1,5 +1,4 @@
 #include "ResponseCurveComponent.h"
-#include "../Nodes/EqualizerNode.h"
 
 ResponseCurveComponent::ResponseCurveComponent(EqualizerNode& node)
     : owner(node)

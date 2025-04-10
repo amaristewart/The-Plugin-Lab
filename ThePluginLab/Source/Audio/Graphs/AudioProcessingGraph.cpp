@@ -1,402 +1,291 @@
 #include "AudioProcessingGraph.h"
-#include "../../Components/PluginNodeComponent.h"
-#include "../../Nodes/EqualizerNode.h"
-#include "../Processors/PluginAudioProcessor.h"
-#include "../../Connections/AudioConnectionPoint.h"
+
+// Add this proxy processor class that delegates to the real processor
+class ProcessorProxy : public juce::AudioProcessor
+{
+public:
+    ProcessorProxy(juce::AudioProcessor* sourceProcessor) : source(sourceProcessor)
+    {
+        jassert(source != nullptr);
+    }
+    
+    // Forward essential methods to the source processor
+    void prepareToPlay(double sampleRate, int maxBlockSize) override
+    {
+        if (source) source->prepareToPlay(sampleRate, maxBlockSize);
+    }
+    
+    void releaseResources() override
+    {
+        if (source) source->releaseResources();
+    }
+    
+    void processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages) override
+    {
+        if (source) source->processBlock(buffer, midiMessages);
+    }
+    
+    // Required overrides
+    const juce::String getName() const override { return source ? source->getName() : "Proxy"; }
+    bool acceptsMidi() const override { return source ? source->acceptsMidi() : false; }
+    bool producesMidi() const override { return source ? source->producesMidi() : false; }
+    double getTailLengthSeconds() const override { return source ? source->getTailLengthSeconds() : 0.0; }
+    bool hasEditor() const override { return false; }
+    juce::AudioProcessorEditor* createEditor() override { return nullptr; }
+    int getNumPrograms() override { return source ? source->getNumPrograms() : 0; }
+    int getCurrentProgram() override { return source ? source->getCurrentProgram() : 0; }
+    void setCurrentProgram(int index) override { if (source) source->setCurrentProgram(index); }
+    const juce::String getProgramName(int index) override { return source ? source->getProgramName(index) : ""; }
+    void changeProgramName(int index, const juce::String& name) override { if (source) source->changeProgramName(index, name); }
+    void getStateInformation(juce::MemoryBlock& block) override { if (source) source->getStateInformation(block); }
+    void setStateInformation(const void* data, int size) override { if (source) source->setStateInformation(data, size); }
+
+    juce::AudioProcessor* getSource() const { return source; }
+    
+private:
+    juce::AudioProcessor* source;
+};
 
 AudioProcessingGraph::AudioProcessingGraph()
 {
+    // Create the audio graph
+    audioGraph = std::make_unique<juce::AudioProcessorGraph>();
 }
 
 AudioProcessingGraph::~AudioProcessingGraph()
 {
+    // Clean up resources
+    clear();
 }
 
+bool AudioProcessingGraph::connectProcessors(juce::AudioProcessor* sourceProcessor, int sourceChannel,
+                                      juce::AudioProcessor* destProcessor, int destChannel)
+{
+    if (sourceProcessor == nullptr || destProcessor == nullptr || audioGraph == nullptr)
+        return false;
+        
+    // Find the corresponding graph nodes
+    auto sourceNode = findNode(sourceProcessor);
+    auto destNode = findNode(destProcessor);
+    
+    if (sourceNode == nullptr || destNode == nullptr)
+        return false;
+        
+    // Create connection by explicitly constructing NodeAndChannel objects
+    juce::AudioProcessorGraph::NodeAndChannel source;
+    source.nodeID = sourceNode->nodeID;
+    source.channelIndex = static_cast<juce::uint32>(sourceChannel);
+    
+    juce::AudioProcessorGraph::NodeAndChannel dest;
+    dest.nodeID = destNode->nodeID;
+    dest.channelIndex = static_cast<juce::uint32>(destChannel);
+    
+    // Now create the connection
+    return audioGraph->addConnection({ source, dest });
+}
+
+bool AudioProcessingGraph::disconnectProcessors(juce::AudioProcessor* sourceProcessor, int sourceChannel,
+                                         juce::AudioProcessor* destProcessor, int destChannel)
+{
+    if (sourceProcessor == nullptr || destProcessor == nullptr || audioGraph == nullptr)
+        return false;
+        
+    // Find the corresponding graph nodes
+    auto sourceNode = findNode(sourceProcessor);
+    auto destNode = findNode(destProcessor);
+    
+    if (sourceNode == nullptr || destNode == nullptr)
+        return false;
+        
+    // Create connection by explicitly constructing NodeAndChannel objects
+    juce::AudioProcessorGraph::NodeAndChannel source;
+    source.nodeID = sourceNode->nodeID;
+    source.channelIndex = static_cast<juce::uint32>(sourceChannel);
+    
+    juce::AudioProcessorGraph::NodeAndChannel dest;
+    dest.nodeID = destNode->nodeID;
+    dest.channelIndex = static_cast<juce::uint32>(destChannel);
+    
+    // Remove the connection
+    return audioGraph->removeConnection({ source, dest });
+}
+
+// Fix the createNodeWithoutOwnership method:
+juce::AudioProcessorGraph::Node::Ptr AudioProcessingGraph::createNodeWithoutOwnership(juce::AudioProcessor& processor, juce::AudioProcessorGraph::NodeID nodeID)
+{
+    // Create a proxy that delegates to the real processor without taking ownership
+    auto proxy = std::make_unique<ProcessorProxy>(&processor);
+    
+    // Store the relationship between proxy and real processor
+    auto node = audioGraph->addNode(std::move(proxy), nodeID);
+    
+    return node;
+}
+
+// Fix the addProcessor method:
+juce::AudioProcessorGraph::Node::Ptr AudioProcessingGraph::addProcessor(juce::AudioProcessor* processor)
+{
+    if (processor == nullptr || audioGraph == nullptr)
+        return nullptr;
+        
+    auto nodeID = juce::AudioProcessorGraph::NodeID(processors.indexOf(processor) + 1);
+    
+    // Create a node without transferring ownership
+    return createNodeWithoutOwnership(*processor, nodeID);
+}
+
+void AudioProcessingGraph::addNode(juce::AudioProcessor* processor)
+{
+    if (processor == nullptr || audioGraph == nullptr)
+        return;
+    
+    // Add to our tracking array without taking ownership
+    processors.add(processor);
+    
+    // Use our helper method to add the processor
+    auto node = addProcessor(processor);
+    
+    // If node was added successfully, we'll have a valid node pointer
+    jassert(node != nullptr);
+}
+
+void AudioProcessingGraph::removeNode(juce::AudioProcessor* processor)
+{
+    if (processor == nullptr || audioGraph == nullptr)
+        return;
+        
+    auto node = findNode(processor);
+    if (node != nullptr)
+    {
+        audioGraph->removeNode(node->nodeID);
+        processors.removeFirstMatchingValue(processor);
+    }
+}
+
+void AudioProcessingGraph::addPluginNode(PluginNodeComponent* node)
+{
+    if (node == nullptr || node->getProcessor() == nullptr || audioGraph == nullptr)
+        return;
+        
+    // Add the processor to the graph
+    auto* processor = node->getProcessor();
+    processors.add(processor);
+    
+    // Use our helper method to add the processor
+    auto graphNode = addProcessor(processor);
+    
+    if (graphNode != nullptr)
+    {
+        // Store the mapping
+        nodeProcessorMap.set(node, processor);
+        
+        // Notify listeners
+        if (onProcessingChainChanged)
+            onProcessingChainChanged();
+    }
+}
+
+void AudioProcessingGraph::removePluginNode(PluginNodeComponent* node)
+{
+    if (node == nullptr)
+        return;
+        
+    // Get associated processor
+    auto* processor = nodeProcessorMap[node];
+    if (processor != nullptr)
+    {
+        // Remove from graph
+        removeNode(processor);
+        
+        // Remove from our internal tracking
+        processors.removeFirstMatchingValue(processor);
+        nodeProcessorMap.remove(node);
+        
+        // Notify listeners
+        if (onProcessingChainChanged)
+            onProcessingChainChanged();
+    }
+}
+
+void AudioProcessingGraph::clear()
+{
+    if (audioGraph != nullptr)
+    {
+        audioGraph->clear();
+        processors.clear();
+        nodeProcessorMap.clear();
+    }
+}
+
+juce::AudioProcessorGraph::Node* AudioProcessingGraph::findNode(juce::AudioProcessor* processor)
+{
+    if (processor == nullptr || audioGraph == nullptr)
+        return nullptr;
+        
+    for (auto* node : audioGraph->getNodes())
+    {
+        // Check if the processor itself matches
+        if (node->getProcessor() == processor)
+            return node;
+            
+        // Check if this is a proxy pointing to our processor
+        auto* proxy = dynamic_cast<ProcessorProxy*>(node->getProcessor());
+        if (proxy && proxy->getSource() == processor)
+            return node;
+    }
+    
+    return nullptr;
+}
+
+bool AudioProcessingGraph::connectNodes(int sourceNodeId, int sourceChannelIndex, 
+                                      int destNodeId, int destChannelIndex)
+{
+    if (audioGraph == nullptr)
+        return false;
+        
+    juce::AudioProcessorGraph::NodeAndChannel source;
+    source.nodeID = juce::AudioProcessorGraph::NodeID(sourceNodeId);
+    source.channelIndex = static_cast<juce::uint32>(sourceChannelIndex);
+    
+    juce::AudioProcessorGraph::NodeAndChannel dest;
+    dest.nodeID = juce::AudioProcessorGraph::NodeID(destNodeId);
+    dest.channelIndex = static_cast<juce::uint32>(destChannelIndex);
+    
+    return audioGraph->addConnection({ source, dest });
+}
+
+void AudioProcessingGraph::disconnectNodes(int sourceNodeId, int destNodeId)
+{
+    if (audioGraph == nullptr)
+        return;
+        
+    audioGraph->disconnectNode(juce::AudioProcessorGraph::NodeID(sourceNodeId));
+}
 
 void AudioProcessingGraph::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    graph.setPlayConfigDetails(2, 2, sampleRate, samplesPerBlock);
-    graph.prepareToPlay(sampleRate, samplesPerBlock);
+    currentSampleRate = sampleRate;
+    currentBlockSize = samplesPerBlock;
     
-    if (!inputNode)
+    if (audioGraph != nullptr)
     {
-        inputNode = graph.addNode(std::make_unique<juce::AudioProcessorGraph::AudioGraphIOProcessor>(
-            juce::AudioProcessorGraph::AudioGraphIOProcessor::audioInputNode));
-    }
-    
-    if (!outputNode)
-    {
-        outputNode = graph.addNode(std::make_unique<juce::AudioProcessorGraph::AudioGraphIOProcessor>(
-            juce::AudioProcessorGraph::AudioGraphIOProcessor::audioOutputNode));
-    }
-    
-    for (auto* node : nodes)
-    {
-        if (auto* processor = node->getProcessor())
-        {
-            processor->prepareToPlay(sampleRate, samplesPerBlock);
-        }
+        audioGraph->setPlayConfigDetails(2, 2, sampleRate, samplesPerBlock);
+        audioGraph->prepareToPlay(sampleRate, samplesPerBlock);
     }
 }
 
 void AudioProcessingGraph::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
-    if (graphNeedsUpdate.compareAndSetBool(false, true))
+    if (audioGraph != nullptr)
     {
-        rebuildGraph();
+        audioGraph->processBlock(buffer, midiMessages);
     }
-    
-    graph.processBlock(buffer, midiMessages);
 }
 
 void AudioProcessingGraph::releaseResources()
 {
-    for (auto* node : nodes)
+    if (audioGraph != nullptr)
     {
-        if (auto* processor = node->getProcessor())
-        {
-            processor->releaseResources();
-        }
-    }
-}
-
-bool AudioProcessingGraph::addNode(PluginNodeComponent* node)
-{
-    if (auto* processor = node->getProcessor())
-    {
-        auto graphNode = graph.addNode(std::unique_ptr<juce::AudioProcessor>(processor));
-        if (graphNode)
-        {
-            nodes.add(node);
-            nodeMap[node] = graphNode;
-            graphNeedsUpdate = true;
-            return true;
-        }
-    }
-    return false;
-}
-
-bool AudioProcessingGraph::removeNode(PluginNodeComponent* node)
-{
-    int index = nodes.indexOf(node);
-    if (index >= 0)
-    {
-        nodes.remove(index);
-        return true;
-    }
-    return false;
-}
-
-bool AudioProcessingGraph::connectNodes(PluginNodeComponent* source, int sourceChannel,
-                                     PluginNodeComponent* dest, int destChannel)
-{
-    if (auto sourceNode = nodeMap[source])
-    {
-        if (auto destNode = nodeMap[dest])
-        {
-            auto srcChan = static_cast<uint32_t>(sourceChannel);
-            auto dstChan = static_cast<uint32_t>(destChannel);
-            
-            using NodeAndChannel = juce::AudioProcessorGraph::NodeAndChannel;
-            NodeAndChannel sourceNAC{sourceNode->nodeID, static_cast<int>(srcChan)};
-            NodeAndChannel destNAC{destNode->nodeID, static_cast<int>(dstChan)};
-            
-            if (graph.addConnection({sourceNAC, destNAC}))
-            {
-                connections.add(new NodeConnection(source, srcChan, dest, dstChan));
-                graphNeedsUpdate = true;
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-bool AudioProcessingGraph::disconnectNodes(PluginNodeComponent* source, int sourceChannel,
-                                         PluginNodeComponent* dest, int destChannel)
-{
-    if (auto sourceNode = nodeMap[source])
-    {
-        if (auto destNode = nodeMap[dest])
-        {
-            auto srcChan = static_cast<uint32_t>(sourceChannel);
-            auto dstChan = static_cast<uint32_t>(destChannel);
-            
-            using NodeAndChannel = juce::AudioProcessorGraph::NodeAndChannel;
-            NodeAndChannel sourceNAC{sourceNode->nodeID, static_cast<int>(srcChan)};
-            NodeAndChannel destNAC{destNode->nodeID, static_cast<int>(dstChan)};
-            
-            if (graph.removeConnection({sourceNAC, destNAC}))
-            {
-                for (int i = connections.size() - 1; i >= 0; --i)
-                {
-                    auto* connection = connections[i];
-                    if (connection->getSourceNode() == source &&
-                        connection->getSourceChannel() == sourceChannel &&
-                        connection->getDestinationNode() == dest &&
-                        connection->getDestinationChannel() == destChannel)
-                    {
-                        connections.remove(i);
-                        break;
-                    }
-                }
-                
-                if (onProcessingChainChanged)
-                    onProcessingChainChanged();
-                
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-std::vector<PluginNodeComponent*> AudioProcessingGraph::topologicalSort()
-{
-    std::vector<PluginNodeComponent*> sorted;
-    std::set<PluginNodeComponent*> visited;
-    
-    std::function<void(PluginNodeComponent*)> visit = [&](PluginNodeComponent* node)
-    {
-        if (visited.find(node) != visited.end())
-            return;
-            
-        visited.insert(node);
-        
-        for (auto* connection : connections)
-        {
-            if (connection->getSourceNode() == node)
-            {
-                visit(connection->getDestinationNode());
-            }
-        }
-        
-        sorted.push_back(node);
-    };
-    
-    for (auto* node : nodes)
-    {
-        bool hasInputs = false;
-        for (auto* connection : connections)
-        {
-            if (connection->getDestinationNode() == node)
-            {
-                hasInputs = true;
-                break;
-            }
-        }
-        if (!hasInputs)
-            visit(node);
-    }
-    
-    std::reverse(sorted.begin(), sorted.end());
-    return sorted;
-}
-
-void AudioProcessingGraph::saveToXml(juce::File& file)
-{
-    auto state = createStateTree();
-    std::unique_ptr<juce::XmlElement> xml(state.createXml());
-    xml->writeTo(file);
-}
-
-void AudioProcessingGraph::loadFromXml(const juce::File& file)
-{
-    if (auto xml = juce::XmlDocument::parse(file))
-    {
-        auto state = juce::ValueTree::fromXml(*xml);
-        restoreFromStateTree(state);
-    }
-}
-
-juce::ValueTree AudioProcessingGraph::createStateTree() const
-{
-    juce::ValueTree tree("PLUGIN_LAB_STATE");
-    
-    juce::ValueTree nodesTree("NODES");
-    for (auto* node : nodes)
-    {
-        juce::ValueTree nodeTree("NODE");
-        nodeTree.setProperty("type", static_cast<int>(node->getType()), nullptr);
-        nodeTree.setProperty("x", node->getX(), nullptr);
-        nodeTree.setProperty("y", node->getY(), nullptr);
-        
-        if (auto* processor = node->getProcessor())
-        {
-            juce::MemoryBlock state;
-            processor->getStateInformation(state);
-            nodeTree.setProperty("processorState", state.toBase64Encoding(), nullptr);
-        }
-        
-        nodesTree.addChild(nodeTree, -1, nullptr);
-    }
-    tree.addChild(nodesTree, -1, nullptr);
-    
-    juce::ValueTree connectionsTree("CONNECTIONS");
-    for (auto* connection : connections)
-    {
-        juce::ValueTree connectionTree("CONNECTION");
-        connectionTree.setProperty("sourceNode", nodes.indexOf(connection->getSourceNode()), nullptr);
-        connectionTree.setProperty("sourceChannel", static_cast<int>(connection->getSourceChannel()), nullptr);
-        connectionTree.setProperty("destNode", nodes.indexOf(connection->getDestinationNode()), nullptr);
-        connectionTree.setProperty("destChannel", static_cast<int>(connection->getDestinationChannel()), nullptr);
-        connectionsTree.addChild(connectionTree, -1, nullptr);
-    }
-    tree.addChild(connectionsTree, -1, nullptr);
-    
-    return tree;
-}
-
-juce::Array<ConnectionComponent*> AudioProcessingGraph::getInputConnectionsForNode(PluginNodeComponent* node)
-{
-    juce::Array<ConnectionComponent*> inputs;
-    for (auto* connection : connections)
-    {
-        if (connection->getDestinationNode() == node)
-        {
-            auto* connComp = new ConnectionComponent(
-                new AudioConnectionPoint(*connection->getSourceNode(), ConnectionPointType::Output, connection->sourcePortIndex),
-                new AudioConnectionPoint(*connection->getDestinationNode(), ConnectionPointType::Input, connection->destPortIndex)
-            );
-            inputs.add(connComp);
-        }
-    }
-    return inputs;
-}
-
-juce::Array<ConnectionComponent*> AudioProcessingGraph::getOutputConnectionsForNode(PluginNodeComponent* node)
-{
-    juce::Array<ConnectionComponent*> outputs;
-    for (auto* connection : connections)
-    {
-        if (connection->getSourceNode() == node)
-        {
-            auto* connComp = new ConnectionComponent(
-                new AudioConnectionPoint(*connection->getSourceNode(), ConnectionPointType::Output, connection->sourcePortIndex),
-                new AudioConnectionPoint(*connection->getDestinationNode(), ConnectionPointType::Input, connection->destPortIndex)
-            );
-            outputs.add(connComp);
-        }
-    }
-    return outputs;
-}
-
-void AudioProcessingGraph::restoreFromStateTree(const juce::ValueTree& tree)
-{
-    nodes.clear();
-    connections.clear();
-    
-    if (tree.hasType("PLUGIN_LAB_STATE"))
-    {
-        auto nodesTree = tree.getChildWithName("NODES");
-        if (nodesTree.isValid())
-        {
-            for (int i = 0; i < nodesTree.getNumChildren(); ++i)
-            {
-                auto nodeTree = nodesTree.getChild(i);
-                int typeInt = nodeTree.getProperty("type", -1);
-                if (typeInt < 0) continue;
-                
-                NodeType type = static_cast<NodeType>(typeInt);
-                
-                std::unique_ptr<PluginNodeComponent> newNode;
-                switch (type)
-                {
-                    case NodeType::Equalizer:
-                        newNode = std::make_unique<EqualizerNode>();
-                        break;
-                    default:
-                        continue;
-                }
-                
-                int x = nodeTree.getProperty("x", 0);
-                int y = nodeTree.getProperty("y", 0);
-                newNode->setBounds(x, y, newNode->getWidth(), newNode->getHeight());
-                
-                if (auto* processor = newNode->getProcessor())
-                {
-                    // Restore processor specific state
-                }
-                
-                addNode(newNode.release());
-            }
-        }
-        
-        // Restore connections
-        auto connectionsTree = tree.getChildWithName("CONNECTIONS");
-        if (connectionsTree.isValid())
-        {
-            for (int i = 0; i < connectionsTree.getNumChildren(); ++i)
-            {
-                auto connectionTree = connectionsTree.getChild(i);
-                int sourceNodeIndex = connectionTree.getProperty("sourceNode", -1);
-                int sourcePort = connectionTree.getProperty("sourcePort", -1);
-                int destNodeIndex = connectionTree.getProperty("destNode", -1);
-                int destPort = connectionTree.getProperty("destPort", -1);
-                
-                if (sourceNodeIndex >= 0 && sourceNodeIndex < nodes.size() &&
-                    destNodeIndex >= 0 && destNodeIndex < nodes.size())
-                {
-                    connectNodes(nodes[sourceNodeIndex], sourcePort,
-                               nodes[destNodeIndex], destPort);
-                }
-            }
-        }
-    }
-}
-
-void AudioProcessingGraph::rebuildGraph()
-{
-    graph.clear();
-    
-    for (auto* node : nodes)
-    {
-        if (auto* processor = node->getProcessor())
-        {
-            auto graphNode = graph.addNode(std::unique_ptr<juce::AudioProcessor>(processor));
-            if (graphNode)
-            {
-                nodeMap[node] = graphNode;
-            }
-        }
-    }
-    
-    for (auto* connection : connections)
-    {
-        if (auto sourceNode = nodeMap[connection->getSourceNode()])
-        {
-            if (auto destNode = nodeMap[connection->getDestinationNode()])
-            {
-                auto srcChan = connection->getSourceChannel();
-                auto dstChan = connection->getDestinationChannel();
-                
-                using NodeAndChannel = juce::AudioProcessorGraph::NodeAndChannel;
-                NodeAndChannel source{sourceNode->nodeID, static_cast<int>(srcChan)};
-                NodeAndChannel dest{destNode->nodeID, static_cast<int>(dstChan)};
-                
-                graph.addConnection({source, dest});
-            }
-        }
-    }
-}
-
-void AudioProcessingGraph::saveState(juce::MemoryBlock& destData) const
-{
-    auto state = createStateTree();
-    std::unique_ptr<juce::XmlElement> xml(state.createXml());
-    if (xml != nullptr)
-    {
-        destData.reset();
-        juce::MemoryOutputStream stream(destData, false);
-        xml->writeToStream(stream, {});
-    }
-}
-
-void AudioProcessingGraph::loadState(const void* data, int sizeInBytes)
-{
-    if (auto xml = juce::XmlDocument::parse(juce::String::createStringFromData(data, sizeInBytes)))
-    {
-        auto state = juce::ValueTree::fromXml(*xml);
-        restoreFromStateTree(state);
+        audioGraph->releaseResources();
     }
 }

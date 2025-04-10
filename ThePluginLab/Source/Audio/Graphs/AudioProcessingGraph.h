@@ -1,85 +1,76 @@
 #pragma once
 #include <JuceHeader.h>
 #include "../../Common/Forward.h"
-#include "../../Components/ConnectionComponent.h"
+#include "../../Components/PluginNodeComponent.h"
+#include "../../Nodes/EqualizerNode.h"
+#include "../Processors/PluginAudioProcessor.h"
+#include "../../Connections/AudioConnectionPoint.h"
 #include <vector>
 #include <map>
+#include <memory>
 #include <functional>
 
+// Forward declarations
+class PluginNodeComponent;
+
+/**
+ * Class for handling audio graph processing
+ */
 class AudioProcessingGraph
 {
 public:
     AudioProcessingGraph();
     ~AudioProcessingGraph();
     
+    // Audio processing setup
     void prepareToPlay(double sampleRate, int samplesPerBlock);
-    void processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages);
     void releaseResources();
+    void processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages);
     
-    bool addNode(PluginNodeComponent* node);
-    bool removeNode(PluginNodeComponent* node);
-    bool connectNodes(PluginNodeComponent* source, int sourceChannel,
-                     PluginNodeComponent* dest, int destChannel);
-    bool disconnectNodes(PluginNodeComponent* source, int sourceChannel,
-                        PluginNodeComponent* dest, int destChannel);
+    // Graph management - basic methods
+    void addNode(juce::AudioProcessor* processor);
+    void removeNode(juce::AudioProcessor* processor);
+    bool connectNodes(int sourceNodeId, int sourceChannelIndex, 
+                     int destNodeId, int destChannelIndex);
+    void disconnectNodes(int sourceNodeId, int destNodeId);
+    void clear();
     
-    void saveState(juce::MemoryBlock& destData) const;
-    void loadState(const void* data, int sizeInBytes);
+    // Advanced node management for PluginNodeComponents
+    void addPluginNode(PluginNodeComponent* node);
+    void removePluginNode(PluginNodeComponent* node);
     
-    juce::Array<PluginNodeComponent*> getConnectedNodes() const 
-    { 
-        juce::Array<PluginNodeComponent*> result;
-        for (auto* node : nodes)
-            result.add(node);
-        return result;
-    }
+    // Connection management for processors
+    bool connectProcessors(juce::AudioProcessor* sourceProcessor, int sourceChannel,
+                          juce::AudioProcessor* destProcessor, int destChannel);
+    bool disconnectProcessors(juce::AudioProcessor* sourceProcessor, int sourceChannel,
+                             juce::AudioProcessor* destProcessor, int destChannel);
     
-    void saveToXml(juce::File& file);
-    void loadFromXml(const juce::File& file);
+    // Check if graph has any active nodes
+    bool hasActiveNodes() const { return audioGraph != nullptr && audioGraph->getNumNodes() > 0; }
     
-    juce::ValueTree createStateTree() const;
-    void restoreFromStateTree(const juce::ValueTree& tree);
-    
+    // Callback when processing chain changes
     std::function<void()> onProcessingChainChanged;
     
-    juce::Array<ConnectionComponent*> getInputConnectionsForNode(PluginNodeComponent* node);
-    juce::Array<ConnectionComponent*> getOutputConnectionsForNode(PluginNodeComponent* node);
+    // Add this method declaration in the public section:
+    juce::AudioProcessorGraph::Node::Ptr createNodeWithoutOwnership(juce::AudioProcessor& processor, juce::AudioProcessorGraph::NodeID nodeID);
 
-    int getNumNodes() const { return nodes.size(); }
-    bool hasActiveNodes() const { return !nodes.isEmpty(); }
-    
 private:
-    struct NodeConnection
-    {
-        PluginNodeComponent* source;
-        uint32_t sourcePortIndex;
-        PluginNodeComponent* destination;
-        uint32_t destPortIndex;
-
-        NodeConnection() = default;
-        NodeConnection(PluginNodeComponent* src, uint32_t srcPort, PluginNodeComponent* dest, uint32_t destPort)
-            : source(src), sourcePortIndex(srcPort),
-              destination(dest), destPortIndex(destPort) {}
-
-        PluginNodeComponent* getSourceNode() const { return source; }
-        uint32_t getSourceChannel() const { return sourcePortIndex; }
-        PluginNodeComponent* getDestinationNode() const { return destination; }
-        uint32_t getDestinationChannel() const { return destPortIndex; }
-    };
-
-    juce::OwnedArray<PluginNodeComponent> nodes;
-    juce::OwnedArray<NodeConnection> connections;
-
-    std::vector<PluginNodeComponent*> topologicalSort();
+    // Helper methods
+    juce::AudioProcessorGraph::Node* findNode(juce::AudioProcessor* processor);
     
-    void rebuildGraph();
+    // Method for adding processors that handles unique_ptr requirements
+    juce::AudioProcessorGraph::Node::Ptr addProcessor(juce::AudioProcessor* processor);
     
-    juce::AudioProcessorGraph graph;
-    juce::AudioProcessorGraph::Node::Ptr inputNode;
-    juce::AudioProcessorGraph::Node::Ptr outputNode;
+    // The JUCE audio processing graph
+    std::unique_ptr<juce::AudioProcessorGraph> audioGraph;
     
-    std::map<PluginNodeComponent*, juce::AudioProcessorGraph::Node::Ptr> nodeMap;
-    juce::Atomic<bool> graphNeedsUpdate{false};
+    // Default sample rate and block size
+    double currentSampleRate = 44100.0;
+    int currentBlockSize = 512;
+    
+    // Track processors and nodes
+    juce::Array<juce::AudioProcessor*> processors;
+    juce::HashMap<PluginNodeComponent*, juce::AudioProcessor*> nodeProcessorMap;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioProcessingGraph)
 };

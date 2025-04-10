@@ -1,109 +1,84 @@
 #pragma once
 #include <JuceHeader.h>
-#include "../Common/Forward.h"
+#include "../Common/Types.h"
+#include "../Common/Features.h"
 
-class PluginToolbar : public juce::Component,
-                     public juce::DragAndDropContainer
+/**
+ * Toolbar component with plugin tools and menu options
+ */
+class PluginToolbar : public juce::Component
 {
 public:
     PluginToolbar();
-    ~PluginToolbar() override = default;
+    ~PluginToolbar() override;
     
     void paint(juce::Graphics& g) override;
     void resized() override;
     
-    std::function<void(NodeType)> onPluginSelected;
+    // Set callbacks for tool selection and menu actions
+    void setToolSelectedCallback(std::function<void(ComponentType)> callback);
+    void setActiveTool(ComponentType toolType);
     
+    // Menu action callbacks
+    std::function<void(NodeType)> onPluginSelected;
     std::function<void()> onNewProject;
     std::function<void()> onOpenProject;
     std::function<void()> onSaveProject;
     std::function<void()> onSaveProjectAs;
-    std::function<void()> onExportPlugin;
+    std::function<void()> onExportRequest;
     std::function<void(const juce::String&)> onLoadTemplate;
     std::function<void(const juce::String&)> onStartTutorial;
     std::function<void(bool)> onShowTips;
     
 private:
-    // MenuBarModel implementation
+    // Tool button class for the toolbar
+    class ToolButton : public juce::DrawableButton
+    {
+    public:
+        ToolButton(const juce::String& name, ComponentType type);
+        ComponentType getType() const { return toolType; }
+        
+    private:
+        ComponentType toolType;
+    };
+    
+    // MenuBarModel implementation for the menu
     class ToolbarMenuModel : public juce::MenuBarModel
     {
     public:
         ToolbarMenuModel(PluginToolbar& owner) : toolbar(owner) {}
         
-        juce::StringArray getMenuBarNames() override
-        {
-            return { "File", "Templates", "Learn" };
-        }
+        juce::StringArray getMenuBarNames() override;
         
-        juce::PopupMenu getMenuForIndex(int menuIndex, const juce::String& /*menuName*/) override
-        {
-            juce::PopupMenu menu;
-            
-            if (menuIndex == 0) // File menu
-            {
-                menu.addItem(1, "New Project", true, false);
-                menu.addItem(2, "Open Project...", true, false);
-                menu.addSeparator();
-                menu.addItem(3, "Save", true, false);
-                menu.addItem(4, "Save As...", true, false);
-                menu.addSeparator();
-                menu.addItem(5, "Export Plugin...", true, false);
-            }
-            else if (menuIndex == 1) // Templates menu
-            {
-                menu.addItem(6, "Basic EQ", true, false);
-                menu.addItem(7, "Basic Compressor", true, false);
-            }
-            else if (menuIndex == 2) // Learn menu
-            {
-                menu.addItem(8, "Start Tutorial", true, false);
-                menu.addItem(9, "Show Tips", true, false);
-            }
-            
-            return menu;
-        }
+        juce::PopupMenu getMenuForIndex(int menuIndex, const juce::String& /*menuName*/) override;
         
-        void menuItemSelected(int menuItemID, int /*topLevelMenuIndex*/) override
-        {
-            switch (menuItemID)
-            {
-                case 1: if (toolbar.onNewProject) toolbar.onNewProject(); break;
-                case 2: if (toolbar.onOpenProject) toolbar.onOpenProject(); break;
-                case 3: if (toolbar.onSaveProject) toolbar.onSaveProject(); break;
-                case 4: if (toolbar.onSaveProjectAs) toolbar.onSaveProjectAs(); break;
-                case 5: if (toolbar.onExportPlugin) toolbar.onExportPlugin(); break;
-                case 6: if (toolbar.onLoadTemplate) toolbar.onLoadTemplate("Basic EQ"); break;
-                case 7: if (toolbar.onLoadTemplate) toolbar.onLoadTemplate("Basic Compressor"); break;
-                case 8: if (toolbar.onStartTutorial) toolbar.onStartTutorial("Getting Started"); break;
-                case 9: if (toolbar.onShowTips) toolbar.onShowTips(true); break;
-            }
-        }
+        void menuItemSelected(int menuItemID, int /*topLevelMenuIndex*/) override;
         
     private:
         PluginToolbar& toolbar;
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ToolbarMenuModel)
     };
     
-    class PluginButton : public juce::TextButton
-    {
-    public:
-        PluginButton(const juce::String& name, NodeType t)
-            : juce::TextButton(name), type(t) {}
-        
-        NodeType getType() const { return type; }
-        
-    private:
-        NodeType type;
-    };
+    void createToolButtons();
+    void addToolButton(const juce::String& name, ComponentType type);
+    ToolButton* findToolButton(ComponentType type);
     
-    void addPluginTemplate(const juce::String& name, NodeType type);
-    NodeType getNodeTypeFromName(const juce::String& name);
+    juce::OwnedArray<ToolButton> toolButtons;
+    ComponentType activeToolType;
     
-    juce::OwnedArray<PluginButton> toolbarButtons;
+    std::function<void(ComponentType)> onToolSelected;
     
+    // Logo and menu
     juce::Image logo;
     std::unique_ptr<juce::MenuBarComponent> menuBar;
-    std::unique_ptr<ToolbarMenuModel> menuModel; 
+    std::unique_ptr<ToolbarMenuModel> menuModel;
+    
+    // Toolbar buttons
+    juce::TextButton newButton {"New"};
+    juce::TextButton openButton {"Open"};
+    juce::TextButton saveButton {"Save"};
+    juce::TextButton exportButton {"Export"};
+    juce::TextButton settingsButton {"Settings"};
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(PluginToolbar)
 };

@@ -1,33 +1,44 @@
 #pragma once
 #include <JuceHeader.h>
+#include "../Common/Types.h"
+#include "../Components/ConcretePluginNode.h"
+#include "../Audio/Graphs/AudioProcessingGraph.h"
 #include "PluginEditorCanvas.h"
-#include "ComponentPanel.h"
-#include "TopMenuBar.h"
+#include "../GUI/ComponentPanel.h"
+#include "../Common/Features.h"
+#include "../Components/ConnectionComponent.h"
 
+// Forward declarations
+class PluginEditorCanvas;
+class ComponentPanel;
+class PluginNodeComponent;
+class ConcretePluginNode;
+class AudioConnectionPoint;
+class ConnectionComponent;
+class AudioProcessingGraph;
+
+/**
+ * Main layout component that holds the editor canvas and component panel
+ */
 class MainLayout : public juce::Component
 {
 public:
     MainLayout();
     ~MainLayout() override;
-
-    void paint(juce::Graphics&) override;
+    
+    void paint(juce::Graphics& g) override;
     void resized() override;
-
+    
 private:
-    // Top bar components
-    std::unique_ptr<juce::Label> projectNameLabel;
-    std::unique_ptr<juce::TextEditor> projectNameEditor;
-    
-    // Menu components
-    std::unique_ptr<TopMenuBar> menuBar;
-    std::unique_ptr<ComponentPanel> componentPanel;
     std::unique_ptr<PluginEditorCanvas> canvas;
+    std::unique_ptr<ComponentPanel> componentPanel;
     
-    // Theme colors
-    const juce::Colour backgroundColor = juce::Colour(0xFF2D2D2D);
-    const juce::Colour accentColor1 = juce::Colour(0xFF61DAFB);    // Bright blue
-    const juce::Colour accentColor2 = juce::Colour(0xFFFF6B6B);    // Coral pink
-    const juce::Colour accentColor3 = juce::Colour(0xFF4CAF50);    // Green
+    // Handler methods
+    void createNode(ComponentType type);
+    void handleNodeAdded(PluginNodeComponent* node);
+    void handleNodeRemoved(PluginNodeComponent* node);
+    void handleConnectionMade(AudioConnectionPoint* source, AudioConnectionPoint* destination);
+    void handleConnectionRemoved(ConnectionComponent* connection);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainLayout)
-}; 
+};

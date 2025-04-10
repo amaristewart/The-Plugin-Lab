@@ -1,48 +1,50 @@
 #pragma once
 #include <JuceHeader.h>
+#include "Common/Types.h"
+#include "GUI/TopMenuBar.h"
+#include "GUI/ToolPalette.h"
 #include "GUI/PluginToolbar.h"
 #include "GUI/PluginEditorCanvas.h"
 #include "GUI/ComponentPanel.h"
-#include "Audio/Graphs/AudioProcessingGraph.h"
-#include "Export/PluginProject.h"
+#include "Common/Features.h"
 
-class MainComponent : public juce::AudioAppComponent
+class PluginEditorCanvas;
+
+/**
+ * Main application component containing toolbar, component panel, and canvas
+ */
+class MainComponent : public juce::Component
 {
 public:
     MainComponent();
     ~MainComponent() override;
-
-    // Audio processing callbacks
-    void prepareToPlay(int samplesPerBlockExpected, double sampleRate) override;
-    void getNextAudioBlock(const juce::AudioSourceChannelInfo& bufferToFill) override;
-    void releaseResources() override;
-
-    // Component overrides
+    
     void paint(juce::Graphics& g) override;
     void resized() override;
-
-    void processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages);
-
-private:
-    void setupCallbacks();
-    bool confirmDiscardChanges();
-    void saveProject(const juce::File& file);
-    void loadProject(const juce::File& file);
-    void showErrorMessage(const juce::String& title, const juce::String& message);
-    void updateProjectName();
-
-    std::unique_ptr<PluginToolbar> toolbar;
-    std::unique_ptr<ComponentPanel> componentPanel;
-    std::unique_ptr<PluginEditorCanvas> editorCanvas;
-    std::unique_ptr<AudioProcessingGraph> audioGraph;
     
-    PluginProject project;
+private:
+    // Project management functions
+    void exportPlugin();
+    void newProject();
+    void openProject();
+    void saveProject();
+    void saveProjectToFile(const juce::File& file);
+    void loadProject(const juce::File& file);
+    
+    // Main components
+    std::unique_ptr<TopMenuBar> topMenuBar;
+    std::unique_ptr<ToolPalette> toolPalette;
+    std::unique_ptr<PluginEditorCanvas> canvas;
+    
+    // File handling
+    std::unique_ptr<juce::FileChooser> fileChooser;
     juce::File currentProjectFile;
-    bool hasUnsavedChanges = false;
-    std::unique_ptr<juce::Label> projectNameEditor;
-
-    double currentSampleRate = 0.0;
-    int currentBlockSize = 0;
+    
+    // Current selected tool
+    ComponentType currentTool = ComponentType::Knob;
+    
+    // Logo
+    juce::Image logo;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(MainComponent)
 };

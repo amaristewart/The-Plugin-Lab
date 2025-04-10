@@ -1,27 +1,34 @@
 #pragma once
+#include <JuceHeader.h>
 
+/**
+ * Defines constants and features for the application
+ */
 namespace Features
 {
-    // Color scheme
-    const juce::Colour backgroundColor = juce::Colour(0xFF1E1E1E);
-    const juce::Colour guiColor = juce::Colour(0xFF61DAFB);     // Blue
-    const juce::Colour eqColor = juce::Colour(0xFFFF6B6B);      // Pink
-    const juce::Colour compColor = juce::Colour(0xFF4CAF50);    // Green
-    
-    // Toolbar gradient
-    const juce::Colour toolbarGradientStart = juce::Colour(0xFF61DAFB);  // Light blue
-    const juce::Colour toolbarGradientEnd = juce::Colour(0xFFFF6B6B);    // Pink
-    
     // Component sizes
-    const int toolbarHeight = 40;
-    const int componentPanelWidth = 200;
-    const int categoryHeaderHeight = 30;
-    
-    // Animation settings
-    const float hoverScaleAmount = 1.1f;
-    const int animationFPS = 60;
+    inline constexpr int toolbarHeight = 40;
+    inline constexpr int componentPanelWidth = 200;
+    inline constexpr int categoryHeaderHeight = 30;
     
     // Grid settings
-    const int gridSize = 20;
-    const float gridOpacity = 0.1f;
-} 
+    inline constexpr int gridSize = 20;
+    inline constexpr float gridOpacity = 0.1f;
+    
+    // Color scheme
+    inline const juce::Colour guiColor = juce::Colour(0xFF61DAFB);     // Blue
+    inline const juce::Colour eqColor = juce::Colour(0xFFFF6B6B);      // Pink
+    inline const juce::Colour compColor = juce::Colour(0xFF4CAF50);    // Green
+    
+    // Background colors
+    inline const juce::Colour backgroundColor = juce::Colour(0xFF1E1E1E);
+    inline const juce::Colour canvasBackgroundColor = juce::Colour(0xFF121212);
+    
+    // Toolbar colors
+    inline const juce::Colour toolbarGradientStart = juce::Colour(0xFF61DAFB);  // Light blue
+    inline const juce::Colour toolbarGradientEnd = juce::Colour(0xFFFF6B6B);    // Pink
+    
+    // Connection colors
+    inline const juce::Colour connectionColor = juce::Colours::white;
+    inline const juce::Colour connectionHighlightColor = juce::Colours::orange;
+}

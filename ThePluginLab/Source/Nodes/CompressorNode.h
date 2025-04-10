@@ -1,59 +1,65 @@
 #pragma once
-
 #include <JuceHeader.h>
-#include "../Audio/AudioPort.h"
-#include "../Visualizers/CompressorVisualizer.h"
 #include "../Components/PluginNodeComponent.h"
-#include "../Audio/Processors/CompressorProcessor.h"
-#include "../Common/Types.h"
 
-class CompressorNode : public PluginNodeComponent,
-                      private juce::Slider::Listener,
-                      private juce::Button::Listener,
-                      private juce::ComboBox::Listener
+// Forward declarations
+class AudioConnectionPoint;
+
+/**
+ * Compressor node component 
+ */
+class CompressorNode : public PluginNodeComponent
 {
 public:
     CompressorNode();
-    ~CompressorNode() override;
-
-    // Component overrides
-    void paint(juce::Graphics&) override;
-    void resized() override;
-
-    // PluginNodeComponent pure virtual implementation
-    NodeType getType() const override { return NodeType::Compressor; }
-    juce::AudioProcessor* getProcessor() override { return processor.get(); }
-
-    // Override virtual methods with matching signatures
+    ~CompressorNode();
+    
+    // Type and processor implementations
+    NodeType getType() const override;
+    juce::AudioProcessor* getProcessor() override;
+    
+    // Connection point implementations
     void addInputPort(const juce::String& name) override;
     void addOutputPort(const juce::String& name) override;
-    void addParameter(const juce::String& name, float min, float max, float defaultValue) override;
-
-protected:
-    // This is protected in the base class, so should be protected here too
-    void updateMeters() override;
-
+    
+    // Port accessor implementations
+    AudioConnectionPoint* getInputPort(int index) const override;
+    AudioConnectionPoint* getOutputPort(int index) const override;
+    
+    // Compressor-specific methods
+    void setThreshold(float threshold);
+    float getThreshold() const;
+    
+    void setRatio(float ratio);
+    float getRatio() const;
+    
+    void setAttack(float attack);
+    float getAttack() const;
+    
+    void setRelease(float release);
+    float getRelease() const;
+    
+    // Component methods
+    void paint(juce::Graphics& g) override;
+    void resized() override;
+    
 private:
-    // JUCE Listener implementations
-    void comboBoxChanged(juce::ComboBox*) override;
-    void sliderValueChanged(juce::Slider*) override;
-    void buttonClicked(juce::Button*) override;
-
-    // Helper methods
-    void typeChanged();
-    void updateParametersForType(DynamicType type);
-    void updateProcessor();
-    void updateParameters();
-    void setBypassState(bool shouldBeBypassed);
-    void setupParameters();
-
-    // Member variables
-    std::unique_ptr<CompressorProcessor> processor{ new CompressorProcessor() };
-    std::unique_ptr<juce::ComboBox> typeSelector{ new juce::ComboBox() };
-    std::unique_ptr<juce::ToggleButton> bypassButton{ new juce::ToggleButton("Bypass") };
-    std::unique_ptr<CompressorVisualizer> visualizer{ new CompressorVisualizer() };
-    juce::OwnedArray<AudioPort> inputPorts;
-    juce::OwnedArray<AudioPort> outputPorts;
-
+    // Compressor-specific data
+    std::unique_ptr<juce::AudioProcessor> processor;
+    juce::OwnedArray<AudioConnectionPoint> inputPorts;
+    juce::OwnedArray<AudioConnectionPoint> outputPorts;
+    
+    // Controls
+    juce::Slider thresholdSlider;
+    juce::Slider ratioSlider;
+    juce::Slider attackSlider;
+    juce::Slider releaseSlider;
+    
+    // Parameters
+    float threshold = -12.0f;
+    float ratio = 4.0f;
+    float attack = 10.0f;
+    float release = 100.0f;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CompressorNode)
 };

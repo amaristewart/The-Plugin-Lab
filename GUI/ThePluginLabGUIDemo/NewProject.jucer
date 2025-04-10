@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<JUCERPROJECT id="fUiRBa" name="ThePluginLabGUIDemo" projectType="guiapp" useAppConfig="0"
+              addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
+  <MAINGROUP id="UgFQfO" name="ThePluginLabGUIDemo">
+    <GROUP id="{4329582A-FF7C-E989-D818-0D76B20036B6}" name="Resources">
+      <FILE id="HlDqiM" name="logo.png" compile="0" resource="1" file="Resources/logo.png"/>
+    </GROUP>
+    <FILE id="U8MiAw" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+    <FILE id="g708tI" name="MainComponent.cpp" compile="1" resource="0"
+          file="MainComponent.cpp"/>
+    <FILE id="TtRP0i" name="MainComponent.h" compile="0" resource="0" file="MainComponent.h"/>
+    <GROUP id="{21DDE12C-BBD3-A7D0-2187-FEFE5C89F0DB}" name="Source">
+      <FILE id="PrwUOd" name="Block.cpp" compile="1" resource="0" file="Source/Block.cpp"/>
+      <FILE id="TqmGn6" name="CustomShapeButton.h" compile="0" resource="0"
+            file="Source/CustomShapeButton.h"/>
+      <FILE id="UFBqZY" name="Block.h" compile="0" resource="0" file="Source/Block.h"/>
+      <FILE id="hA3rTB" name="BlockComponent.cpp" compile="1" resource="0"
+            file="Source/BlockComponent.cpp"/>
+      <FILE id="ehd1MN" name="BlockComponent.h" compile="0" resource="0"
+            file="Source/BlockComponent.h"/>
+      <FILE id="xXiFl8" name="BottomPanel.cpp" compile="1" resource="0" file="Source/BottomPanel.cpp"/>
+      <FILE id="AUQxdJ" name="BottomPanel.h" compile="0" resource="0" file="Source/BottomPanel.h"/>
+      <FILE id="FWXpoH" name="CenterCanvas.cpp" compile="1" resource="0"
+            file="Source/CenterCanvas.cpp"/>
+      <FILE id="axqG2J" name="CenterCanvas.h" compile="0" resource="0" file="Source/CenterCanvas.h"/>
+      <FILE id="UhDtCw" name="LeftSidebar.cpp" compile="1" resource="0" file="Source/LeftSidebar.cpp"/>
+      <FILE id="SGjFog" name="LeftSidebar.h" compile="0" resource="0" file="Source/LeftSidebar.h"/>
+      <FILE id="bWzLXI" name="RightSidebar.cpp" compile="1" resource="0"
+            file="Source/RightSidebar.cpp"/>
+      <FILE id="NSvJUR" name="RightSidebar.h" compile="0" resource="0" file="Source/RightSidebar.h"/>
+      <FILE id="KWVWlx" name="TopNavigationBar.cpp" compile="1" resource="0"
+            file="Source/TopNavigationBar.cpp"/>
+      <FILE id="KkVTY1" name="TopNavigationBar.h" compile="0" resource="0"
+            file="Source/TopNavigationBar.h"/>
+      <FILE id="PofRb5" name="Utilities.h" compile="0" resource="0" file="Source/Utilities.h"/>
+    </GROUP>
+  </MAINGROUP>
+  <MODULES>
+    <MODULE id="juce_animation" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_gui_extra" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_video" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+  </MODULES>
+  <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
+  <EXPORTFORMATS>
+    <XCODE_MAC targetFolder="Builds/MacOSX">
+      <CONFIGURATIONS>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="NewProject"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="NewProject"/>
+      </CONFIGURATIONS>
+      <MODULEPATHS>
+        <MODULEPATH id="juce_animation" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../../../JUCE/modules"/>
+        <MODULEPATH id="juce_video" path="../../../../JUCE/modules"/>
+      </MODULEPATHS>
+    </XCODE_MAC>
+  </EXPORTFORMATS>
+</JUCERPROJECT>
