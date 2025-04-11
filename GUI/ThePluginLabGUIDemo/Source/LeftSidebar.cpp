@@ -262,9 +262,50 @@ void LeftSidebar::updateBlocksForCategory(const juce::String& category)
     // Add new blocks based on selected category
     if (category == "GUI")
     {
-        addBlockToCategory("Button", juce::Colour::fromRGB(91, 187, 91));
-        addBlockToCategory("Slider", juce::Colour::fromRGB(91, 187, 91));
-        addBlockToCategory("Knob", juce::Colour::fromRGB(91, 187, 91));
+        // Get viewport dimensions to calculate block sizes
+        const int availableWidth = viewport.getWidth() - 25 - viewport.getScrollBarThickness();
+        
+        // Create custom images if BinaryData is not available
+        juce::Image buttonImage, sliderImage, knobImage;
+        
+        // First try to load from BinaryData
+        buttonImage = juce::ImageCache::getFromMemory(BinaryData::ButtonComponent_png, BinaryData::ButtonComponent_pngSize);
+        sliderImage = juce::ImageCache::getFromMemory(BinaryData::SliderComponent_png, BinaryData::SliderComponent_pngSize);
+        knobImage = juce::ImageCache::getFromMemory(BinaryData::KnobComponent_png, BinaryData::KnobComponent_pngSize);
+        
+        // If images not found, create custom ones
+        if (buttonImage.isNull()) {
+            buttonImage = createButtonImage();
+        }
+        
+        if (sliderImage.isNull()) {
+            sliderImage = createSliderImage();
+        }
+        
+        if (knobImage.isNull()) {
+            knobImage = createKnobImage();
+        }
+        
+        // Button: standard height
+        const int buttonHeight = 60;
+        auto* buttonComp = new BlockComponent("Button", juce::Colour::fromRGB(91, 187, 91), buttonImage);
+        buttonComp->setSize(availableWidth, buttonHeight);
+        blockListComponent.addAndMakeVisible(buttonComp);
+        blockComponents.add(buttonComp);
+        
+        // Slider: make MUCH taller than other components
+        const int sliderHeight = 180; // Increased from 120 to 180
+        auto* sliderComp = new BlockComponent("Slider", juce::Colour::fromRGB(91, 187, 91), sliderImage);
+        sliderComp->setSize(availableWidth, sliderHeight);
+        blockListComponent.addAndMakeVisible(sliderComp);
+        blockComponents.add(sliderComp);
+        
+        // Knob: slightly larger than button but smaller than slider
+        const int knobHeight = 80;
+        auto* knobComp = new BlockComponent("Knob", juce::Colour::fromRGB(91, 187, 91), knobImage);
+        knobComp->setSize(availableWidth, knobHeight);
+        blockListComponent.addAndMakeVisible(knobComp);
+        blockComponents.add(knobComp);
     }
     else if (category == "EQ")
     {
@@ -361,20 +402,178 @@ void LeftSidebar::updateBlocksForCategory(const juce::String& category)
         addBlockToCategory("Meter", juce::Colour::fromRGB(187, 91, 187));
     }
     
-    // Update layout with potentially different block heights
+    // Update layout with increased spacing between taller components
     int y = 10;
     for (auto* blockComp : blockComponents)
     {
         // Use block's actual height instead of standard height
         int blockHeight = blockComp->getHeight();
         blockComp->setBounds(5, y, viewport.getWidth() - 15 - viewport.getScrollBarThickness(), blockHeight);
-        y += blockHeight + 10;
+        
+        // Add extra spacing after very tall components
+        if (blockHeight > 100)
+            y += blockHeight + 20; // Increased spacing after tall components
+        else
+            y += blockHeight + 15; // Standard spacing for normal components
     }
     
     // Update total height calculation for the component
     int totalHeight = y;
     blockListComponent.setBounds(0, 0, viewport.getWidth() - viewport.getScrollBarThickness(), 
                                std::max(viewport.getHeight(), totalHeight));
+}
+
+// Add methods to create custom control images
+juce::Image LeftSidebar::createButtonImage()
+{
+    const int width = 160;
+    const int height = 60;
+    
+    juce::Image image(juce::Image::RGB, width, height, true);
+    juce::Graphics g(image);
+    
+    // Fill background
+    g.fillAll(juce::Colour::fromRGB(240, 240, 240));
+    
+    // Draw button shape
+    g.setColour(juce::Colour::fromRGB(91, 187, 91));
+    g.fillRoundedRectangle(10.0f, 10.0f, width - 20.0f, height - 20.0f, 6.0f);
+    
+    // Draw button border
+    g.setColour(juce::Colour::fromRGB(60, 150, 60));
+    g.drawRoundedRectangle(10.0f, 10.0f, width - 20.0f, height - 20.0f, 6.0f, 2.0f);
+    
+    // Draw button text
+    g.setColour(juce::Colours::white);
+    g.setFont(juce::Font(18.0f, juce::Font::bold));
+    g.drawText("BUTTON", 10, 10, width - 20, height - 20, juce::Justification::centred, true);
+    
+    return image;
+}
+
+juce::Image LeftSidebar::createSliderImage()
+{
+    const int width = 160;
+    const int height = 180; // Increased slider height
+    
+    juce::Image image(juce::Image::RGB, width, height, true);
+    juce::Graphics g(image);
+    
+    // Fill background with a slight gradient for more dimension
+    g.setGradientFill(juce::ColourGradient(
+        juce::Colour::fromRGB(245, 245, 245),
+        0.0f, 0.0f,
+        juce::Colour::fromRGB(235, 235, 235),
+        width, height,
+        false
+    ));
+    g.fillAll();
+    
+    // Draw slider track - make it taller
+    const int trackWidth = 24;
+    const int trackHeight = height - 40;
+    const int trackX = (width - trackWidth) / 2;
+    const int trackY = 20;
+    
+    // Draw track with a gradient
+    g.setGradientFill(juce::ColourGradient(
+        juce::Colour::fromRGB(210, 210, 210),
+        trackX, 0,
+        juce::Colour::fromRGB(180, 180, 180),
+        trackX + trackWidth, 0,
+        false
+    ));
+    g.fillRoundedRectangle(trackX, trackY, trackWidth, trackHeight, 8.0f);
+    
+    // Add track border for definition
+    g.setColour(juce::Colour::fromRGB(160, 160, 160));
+    g.drawRoundedRectangle(trackX, trackY, trackWidth, trackHeight, 8.0f, 1.5f);
+    
+    // Draw slider thumb - make it more prominent
+    const int thumbWidth = 40;
+    const int thumbHeight = 20;
+    const int thumbX = (width - thumbWidth) / 2;
+    const int thumbY = trackY + trackHeight / 2 - thumbHeight / 2; // Position in the middle
+    
+    // Draw thumb with gradient for 3D effect
+    g.setGradientFill(juce::ColourGradient(
+        juce::Colour::fromRGB(110, 220, 110),
+        thumbX, thumbY,
+        juce::Colour::fromRGB(80, 180, 80),
+        thumbX, thumbY + thumbHeight,
+        false
+    ));
+    g.fillRoundedRectangle(thumbX, thumbY, thumbWidth, thumbHeight, 6.0f);
+    
+    // Add thumb border
+    g.setColour(juce::Colour::fromRGB(60, 140, 60));
+    g.drawRoundedRectangle(thumbX, thumbY, thumbWidth, thumbHeight, 6.0f, 1.5f);
+    
+    // Add horizontal lines to thumb for visual interest
+    g.setColour(juce::Colours::white.withAlpha(0.5f));
+    for (int i = 0; i < 3; i++) {
+        float lineY = thumbY + 5 + i * 5;
+        g.drawLine(thumbX + 8, lineY, thumbX + thumbWidth - 8, lineY, 1.0f);
+    }
+    
+    // Add tick marks on the track
+    g.setColour(juce::Colours::white);
+    for (int i = 0; i < 5; i++) {
+        float tickY = trackY + (trackHeight * i / 4.0f);
+        g.drawLine(trackX - 5, tickY, trackX, tickY, 1.0f);
+        g.drawLine(trackX + trackWidth, tickY, trackX + trackWidth + 5, tickY, 1.0f);
+    }
+    
+    // Draw label
+    g.setColour(juce::Colours::black);
+    g.setFont(juce::Font(18.0f, juce::Font::bold));
+    g.drawText("SLIDER", 0, height - 25, width, 25, juce::Justification::centred, true);
+    
+    return image;
+}
+
+juce::Image LeftSidebar::createKnobImage()
+{
+    const int width = 160;
+    const int height = 80;
+    
+    juce::Image image(juce::Image::RGB, width, height, true);
+    juce::Graphics g(image);
+    
+    // Fill background
+    g.fillAll(juce::Colour::fromRGB(240, 240, 240));
+    
+    // Draw knob
+    const int knobSize = 50;
+    const int knobX = (width - knobSize) / 2;
+    const int knobY = 5;
+    
+    // Draw outer ring
+    g.setColour(juce::Colour::fromRGB(180, 180, 180));
+    g.fillEllipse(knobX, knobY, knobSize, knobSize);
+    
+    // Draw knob face
+    g.setColour(juce::Colour::fromRGB(91, 187, 91));
+    g.fillEllipse(knobX + 5, knobY + 5, knobSize - 10, knobSize - 10);
+    
+    // Draw indicator line
+    g.setColour(juce::Colours::white);
+    const float centerX = knobX + knobSize / 2.0f;
+    const float centerY = knobY + knobSize / 2.0f;
+    const float angle = -juce::MathConstants<float>::pi * 0.25f; // 45 degrees from top
+    const float length = knobSize / 2.0f - 8.0f;
+    
+    g.drawLine(centerX, centerY, 
+              centerX + length * std::sin(angle), 
+              centerY - length * std::cos(angle), 
+              2.0f);
+    
+    // Draw label
+    g.setColour(juce::Colours::black);
+    g.setFont(16.0f);
+    g.drawText("KNOB", 0, knobY + knobSize + 5, width, 20, juce::Justification::centred, true);
+    
+    return image;
 }
 
 void LeftSidebar::updateCategoryButtonsVisibility()

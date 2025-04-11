@@ -138,6 +138,11 @@ private:
     
     // Helper method to create placeholder tab images
     juce::Image createTabImage(const juce::String& label, juce::Colour colour);
-
+    
+    // Methods to create custom GUI control images
+    juce::Image createButtonImage();
+    juce::Image createSliderImage();
+    juce::Image createKnobImage();
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LeftSidebar)
 };

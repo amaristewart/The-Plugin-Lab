@@ -207,28 +207,86 @@ public:
             mainBounds = bounds.withHeight(bounds.getHeight() - 30);
         }
         
+        const int connectorSize = 10;
+        
         if (hasImage)
         {
-            // For image blocks, position connectors more inward to touch the image content
-            const int connectorSize = 10;
-            const int inset = 27; // Inset from sides
-            const int verticalOffset = -7; // Move connectors up by 5 pixels
-            
-            // Input on left side, with increased inset, moved up a bit
-            inputConnector.setBounds(
-                inset, 
-                mainBounds.getCentreY() - connectorSize/2 + verticalOffset, 
-                connectorSize, 
-                connectorSize
-            );
-            
-            // Output on right side, with increased inset, moved up a bit
-            outputConnector.setBounds(
-                mainBounds.getWidth() - connectorSize - inset, 
-                mainBounds.getCentreY() - connectorSize/2 + verticalOffset, 
-                connectorSize, 
-                connectorSize
-            );
+            // For image blocks, customize connector positions based on block type
+            if (name == "Button")
+            {
+                // Button: position connectors more outward and slightly down
+                inputConnector.setBounds(
+                    0, 
+                    mainBounds.getCentreY() - 2,
+                    connectorSize,
+                    connectorSize
+                );
+                
+                outputConnector.setBounds(
+                    mainBounds.getWidth() - connectorSize, 
+                    mainBounds.getCentreY() - 2,
+                    connectorSize,
+                    connectorSize
+                );
+            }
+            else if (name == "Slider")
+            {
+                // Slider: position connectors more inward to align with the slider track
+                const int inset = 40; // Increased inset to move connectors inward
+                
+                inputConnector.setBounds(
+                    inset, 
+                    mainBounds.getCentreY() - 5,
+                    connectorSize,
+                    connectorSize
+                );
+                
+                outputConnector.setBounds(
+                    mainBounds.getWidth() - connectorSize - inset, 
+                    mainBounds.getCentreY() - 5,
+                    connectorSize,
+                    connectorSize
+                );
+            }
+            else if (name == "Knob")
+            {
+                const int inset = 22;
+                const int verticalOffset = -2;
+                
+                inputConnector.setBounds(
+                    inset, 
+                    mainBounds.getCentreY() + verticalOffset, 
+                    connectorSize, 
+                    connectorSize
+                );
+                
+                outputConnector.setBounds(
+                    mainBounds.getWidth() - connectorSize - inset, 
+                    mainBounds.getCentreY() + verticalOffset, 
+                    connectorSize, 
+                    connectorSize
+                );
+            }
+            else
+            {
+                // Default positioning for other image blocks
+                const int inset = 27;
+                const int verticalOffset = -7;
+                
+                inputConnector.setBounds(
+                    inset, 
+                    mainBounds.getCentreY() - connectorSize/2 + verticalOffset, 
+                    connectorSize, 
+                    connectorSize
+                );
+                
+                outputConnector.setBounds(
+                    mainBounds.getWidth() - connectorSize - inset, 
+                    mainBounds.getCentreY() - connectorSize/2 + verticalOffset, 
+                    connectorSize, 
+                    connectorSize
+                );
+            }
         }
         else if (blockShape == Triangle)
         {
