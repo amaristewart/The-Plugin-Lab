@@ -64,7 +64,7 @@ void TopNavigationBar::resized()
     
     // Position the logo at the left edge with proper alignment
     int logoY = (bounds.getHeight() - logoComponent.getHeight()) / 2;
-    logoComponent.setBounds(0t, logoY, logoComponent.getWidth(), logoComponent.getHeight());
+    logoComponent.setBounds(0, logoY, logoComponent.getWidth(), logoComponent.getHeight());
     
     // Calculate the remaining width for positioning elements
     int remainingWidth = bounds.getWidth() - logoComponent.getWidth() - 20; // Account for logo width

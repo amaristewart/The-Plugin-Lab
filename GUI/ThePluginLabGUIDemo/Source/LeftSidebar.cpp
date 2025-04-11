@@ -15,44 +15,82 @@ LeftSidebar::LeftSidebar()
     // Add listener for tab changes
     overarchingTabs.addChangeListener(this);
 
-    // Add category buttons
-    addAndMakeVisible(guiTab);
-    addAndMakeVisible(eqTab);
-    addAndMakeVisible(dynamicsTab);
-    addAndMakeVisible(visualizerTab);
-
-    // Style category buttons
-    guiTab.setColour(juce::TextButton::buttonColourId, juce::Colour::fromRGB(91, 187, 91));
-    eqTab.setColour(juce::TextButton::buttonColourId, juce::Colour::fromRGB(250, 144, 167));
-    dynamicsTab.setColour(juce::TextButton::buttonColourId, juce::Colour::fromRGB(127, 222, 224));
-    visualizerTab.setColour(juce::TextButton::buttonColourId, juce::Colour::fromRGB(187, 91, 187));
+    // Replace shape buttons with image buttons using BinaryData resources
+    // Load images from BinaryData
+    auto guiIconImage = juce::ImageCache::getFromMemory(BinaryData::GUIIcon_png, BinaryData::GUIIcon_pngSize);
+    auto eqIconImage = juce::ImageCache::getFromMemory(BinaryData::EQIcon_png, BinaryData::EQIcon_pngSize);
+    auto dynamicsIconImage = juce::ImageCache::getFromMemory(BinaryData::DynamicsIcon_png, BinaryData::DynamicsIcon_pngSize);
+    auto visualizerIconImage = juce::ImageCache::getFromMemory(BinaryData::VisualizersIcon_png, BinaryData::VisualizersIcon_pngSize);  
+    // If images aren't found in BinaryData, create placeholder images
+    if (guiIconImage.isNull())
+    {
+        guiIconImage = createPlaceholderIcon("GUI", juce::Colour::fromRGB(91, 187, 91));
+    }
     
-    // Add highlight colors for selected state
-    guiTab.setColour(juce::TextButton::buttonOnColourId, juce::Colour::fromRGB(91, 187, 91).brighter(0.5f));
-    eqTab.setColour(juce::TextButton::buttonOnColourId, juce::Colour::fromRGB(250, 144, 167).brighter(0.5f));
-    dynamicsTab.setColour(juce::TextButton::buttonOnColourId, juce::Colour::fromRGB(127, 222, 224).brighter(0.5f));
-    visualizerTab.setColour(juce::TextButton::buttonOnColourId, juce::Colour::fromRGB(187, 91, 187).brighter(0.5f));
-
-    // Also add text color for better visibility
-    guiTab.setColour(juce::TextButton::textColourOnId, juce::Colours::black);
-    eqTab.setColour(juce::TextButton::textColourOnId, juce::Colours::black);
-    dynamicsTab.setColour(juce::TextButton::textColourOnId, juce::Colours::black);
-    visualizerTab.setColour(juce::TextButton::textColourOnId, juce::Colours::black);
-
-    // Set up toggle state for category buttons
-    guiTab.setClickingTogglesState(true);
-    eqTab.setClickingTogglesState(true);
-    dynamicsTab.setClickingTogglesState(true);
-    visualizerTab.setClickingTogglesState(true);
+    if (eqIconImage.isNull())
+    {
+        eqIconImage = createPlaceholderIcon("EQ", juce::Colour::fromRGB(250, 144, 167));
+    }
     
-    // Add listeners for category button clicks
-    guiTab.onClick = [this] { handleCategoryButtonClicked(&guiTab, "GUI"); };
-    eqTab.onClick = [this] { handleCategoryButtonClicked(&eqTab, "EQ"); };
-    dynamicsTab.onClick = [this] { handleCategoryButtonClicked(&dynamicsTab, "Dynamics"); };
-    visualizerTab.onClick = [this] { handleCategoryButtonClicked(&visualizerTab, "Visualizer"); };
+    if (dynamicsIconImage.isNull())
+    {
+        dynamicsIconImage = createPlaceholderIcon("DYN", juce::Colour::fromRGB(127, 222, 224));
+    }
+    
+    if (visualizerIconImage.isNull())
+    {
+        visualizerIconImage = createPlaceholderIcon("VIZ", juce::Colour::fromRGB(187, 91, 187));
+    }
+
+    // Create image buttons to replace shape buttons
+    guiButton = std::make_unique<juce::ImageButton>("GUI");
+    eqButton = std::make_unique<juce::ImageButton>("EQ");
+    dynamicsButton = std::make_unique<juce::ImageButton>("Dynamics");
+    visualizerButton = std::make_unique<juce::ImageButton>("Visualizer");
+    
+    // Set up images for different button states (normal, over, down)
+    guiButton->setImages(
+        false, true, true,          // resize, maintain aspect ratio, use alpha channel
+        guiIconImage, 0.7f, juce::Colours::transparentBlack,  // normal
+        guiIconImage, 1.0f, juce::Colours::white.withAlpha(0.2f),  // over
+        guiIconImage, 1.0f, juce::Colour::fromRGB(91, 187, 91).brighter(0.5f),  // down
+        0.5f);
+    
+    eqButton->setImages(
+        false, true, true,
+        eqIconImage, 0.7f, juce::Colours::transparentBlack,
+        eqIconImage, 1.0f, juce::Colours::white.withAlpha(0.2f),
+        eqIconImage, 1.0f, juce::Colour::fromRGB(250, 144, 167).brighter(0.5f),
+        0.5f);
+    
+    dynamicsButton->setImages(
+        false, true, true,
+        dynamicsIconImage, 0.7f, juce::Colours::transparentBlack,
+        dynamicsIconImage, 1.0f, juce::Colours::white.withAlpha(0.2f),
+        dynamicsIconImage, 1.0f, juce::Colour::fromRGB(127, 222, 224).brighter(0.5f),
+        0.5f);
+    
+    visualizerButton->setImages(
+        false, true, true,
+        visualizerIconImage, 0.7f, juce::Colours::transparentBlack,
+        visualizerIconImage, 1.0f, juce::Colours::white.withAlpha(0.2f),
+        visualizerIconImage, 1.0f, juce::Colour::fromRGB(187, 91, 187).brighter(0.5f),
+        0.5f);
+
+    // Add the image buttons to this component
+    addAndMakeVisible(guiButton.get());
+    addAndMakeVisible(eqButton.get());
+    addAndMakeVisible(dynamicsButton.get());
+    addAndMakeVisible(visualizerButton.get());
+    
+    // Set up click callbacks for category buttons
+    guiButton->onClick = [this] { handleCategoryButtonClicked(guiButton.get(), "GUI"); };
+    eqButton->onClick = [this] { handleCategoryButtonClicked(eqButton.get(), "EQ"); };
+    dynamicsButton->onClick = [this] { handleCategoryButtonClicked(dynamicsButton.get(), "Dynamics"); };
+    visualizerButton->onClick = [this] { handleCategoryButtonClicked(visualizerButton.get(), "Visualizer"); };
 
     // Set default selection
-    guiTab.setToggleState(true, juce::sendNotification);
+    guiButton->setToggleState(true, juce::sendNotification);
     
     // Set up the viewport
     addAndMakeVisible(viewport);
@@ -66,6 +104,27 @@ LeftSidebar::LeftSidebar()
     setSize(200, 600);
 }
 
+// Helper method to create placeholder icons if binary resources aren't available
+juce::Image LeftSidebar::createPlaceholderIcon(const juce::String& label, juce::Colour colour)
+{
+    juce::Image icon(juce::Image::RGB, 40, 40, true);
+    juce::Graphics g(icon);
+    
+    // Fill background with the category color
+    g.fillAll(colour);
+    
+    // Add a border
+    g.setColour(juce::Colours::white);
+    g.drawRect(0, 0, 40, 40, 1);
+    
+    // Draw text
+    g.setFont(14.0f);
+    g.setColour(juce::Colours::white);
+    g.drawText(label, 0, 0, 40, 40, juce::Justification::centred, true);
+    
+    return icon;
+}
+
 LeftSidebar::~LeftSidebar()
 {
     // Clean up
@@ -75,6 +134,15 @@ LeftSidebar::~LeftSidebar()
 void LeftSidebar::paint(juce::Graphics& g)
 {
     g.fillAll(juce::Colour::fromRGB(240, 240, 240)); // Light grey background
+    
+    // Draw a divider line between the category buttons and block list
+    g.setColour(juce::Colours::grey.withAlpha(0.5f));
+    
+    // Draw vertical divider line between tab column and blocks area
+    g.drawLine(50.0f, 30.0f, 50.0f, float(getHeight()), 1.0f);
+    
+    // Draw horizontal divider under the tabs
+    g.drawLine(0.0f, 30.0f, float(getWidth()), 30.0f, 1.0f);
 }
 
 void LeftSidebar::resized()
@@ -89,20 +157,23 @@ void LeftSidebar::resized()
     auto tabColumn = remainingArea.removeFromLeft(50); // narrow column for tabs
     auto blocksArea = remainingArea; // remaining area for blocks
 
-    // Layout category buttons with proper spacing in the left column
-    int buttonHeight = 40;
-    int spacing = 5;
+    // Increase button size - make them bigger
+    int buttonHeight = 48; // Increased from 40
+    int spacing = 6;     // Increased spacing slightly
     
-    guiTab.setBounds(tabColumn.removeFromTop(buttonHeight).reduced(spacing, 0));
+    // Make buttons take more of the available width
+    int buttonPadding = 3; // Reduced from 5 to make buttons wider
+    
+    guiButton->setBounds(tabColumn.removeFromTop(buttonHeight).reduced(buttonPadding, 0));
     tabColumn.removeFromTop(spacing); // Add spacing between buttons
     
-    eqTab.setBounds(tabColumn.removeFromTop(buttonHeight).reduced(spacing, 0));
+    eqButton->setBounds(tabColumn.removeFromTop(buttonHeight).reduced(buttonPadding, 0));
     tabColumn.removeFromTop(spacing);
     
-    dynamicsTab.setBounds(tabColumn.removeFromTop(buttonHeight).reduced(spacing, 0));
+    dynamicsButton->setBounds(tabColumn.removeFromTop(buttonHeight).reduced(buttonPadding, 0));
     tabColumn.removeFromTop(spacing);
     
-    visualizerTab.setBounds(tabColumn.removeFromTop(buttonHeight).reduced(spacing, 0));
+    visualizerButton->setBounds(tabColumn.removeFromTop(buttonHeight).reduced(buttonPadding, 0));
 
     // Layout the viewport for blocks in the remaining area
     viewport.setBounds(blocksArea);
@@ -183,19 +254,25 @@ void LeftSidebar::updateCategoryButtonsVisibility()
 {
     bool isCodeTabSelected = overarchingTabs.getCurrentTabIndex() == 0;
     
-    guiTab.setVisible(isCodeTabSelected);
-    eqTab.setVisible(isCodeTabSelected);
-    dynamicsTab.setVisible(isCodeTabSelected);
-    visualizerTab.setVisible(isCodeTabSelected);
+    guiButton->setVisible(isCodeTabSelected);
+    eqButton->setVisible(isCodeTabSelected);
+    dynamicsButton->setVisible(isCodeTabSelected);
+    visualizerButton->setVisible(isCodeTabSelected);
     
-    // Clear and update blocks based on the selected tab
+    // Update the blocks list based on the selected tab and category
     if (isCodeTabSelected)
     {
         // Show programming blocks for Code tab
-        updateBlocksForCategory(guiTab.getToggleState() ? "GUI" : 
-                              eqTab.getToggleState() ? "EQ" : 
-                              dynamicsTab.getToggleState() ? "Dynamics" : 
-                              visualizerTab.getToggleState() ? "Visualizer" : "GUI");
+        if (guiButton->getToggleState())
+            updateBlocksForCategory("GUI");
+        else if (eqButton->getToggleState())
+            updateBlocksForCategory("EQ");
+        else if (dynamicsButton->getToggleState())
+            updateBlocksForCategory("Dynamics");
+        else if (visualizerButton->getToggleState())
+            updateBlocksForCategory("Visualizer");
+        else
+            updateBlocksForCategory("GUI");  // Default to GUI category
     }
     else
     {
@@ -224,26 +301,13 @@ void LeftSidebar::changeListenerCallback(juce::ChangeBroadcaster* source)
 
 void LeftSidebar::handleCategoryButtonClicked(juce::Button* clickedButton, const juce::String& category)
 {
-    // Deselect all other category buttons
-    if (clickedButton != &guiTab) guiTab.setToggleState(false, juce::dontSendNotification);
-    if (clickedButton != &eqTab) eqTab.setToggleState(false, juce::dontSendNotification);
-    if (clickedButton != &dynamicsTab) dynamicsTab.setToggleState(false, juce::dontSendNotification);
-    if (clickedButton != &visualizerTab) visualizerTab.setToggleState(false, juce::dontSendNotification);
+    // Update toggle states - only one button should be toggled at a time
+    guiButton->setToggleState(clickedButton == guiButton.get(), juce::dontSendNotification);
+    eqButton->setToggleState(clickedButton == eqButton.get(), juce::dontSendNotification);
+    dynamicsButton->setToggleState(clickedButton == dynamicsButton.get(), juce::dontSendNotification);
+    visualizerButton->setToggleState(clickedButton == visualizerButton.get(), juce::dontSendNotification);
     
-    // Make sure the clicked button is toggled on
-    clickedButton->setToggleState(true, juce::dontSendNotification);
-    
-    // Apply visual highlight to the selected button
-    guiTab.setColour(juce::TextButton::buttonColourId, 
-                    guiTab.getToggleState() ? juce::Colour::fromRGB(91, 187, 91).brighter(0.5f) : juce::Colour::fromRGB(91, 187, 91));
-    eqTab.setColour(juce::TextButton::buttonColourId, 
-                   eqTab.getToggleState() ? juce::Colour::fromRGB(250, 144, 167).brighter(0.5f) : juce::Colour::fromRGB(250, 144, 167));
-    dynamicsTab.setColour(juce::TextButton::buttonColourId, 
-                         dynamicsTab.getToggleState() ? juce::Colour::fromRGB(127, 222, 224).brighter(0.5f) : juce::Colour::fromRGB(127, 222, 224));
-    visualizerTab.setColour(juce::TextButton::buttonColourId, 
-                           visualizerTab.getToggleState() ? juce::Colour::fromRGB(187, 91, 187).brighter(0.5f) : juce::Colour::fromRGB(187, 91, 187));
-    
-    // Update blocks for the clicked category
+    // Update the blocks list based on the selected category
     updateBlocksForCategory(category);
 }
 

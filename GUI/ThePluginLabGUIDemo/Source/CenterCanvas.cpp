@@ -16,33 +16,29 @@ CenterCanvas::CenterCanvas()
     // Add this component as a DragAndDropTarget
     setExplicitFocusOrder(1); // Make sure we can receive mouse events
     
-    // Initialize delete area (trash icon in bottom right) with a larger, more visible size
+    // Initialize delete area 
     const int trashSize = 60;
     deleteArea = juce::Rectangle<int>(getWidth() - trashSize - 20, 
                                      getHeight() - trashSize - 20,
                                      trashSize, trashSize);
     
-    // Create a basic trash icon image
-    trashIcon = juce::Image(juce::Image::ARGB, trashSize, trashSize, true);
-    juce::Graphics g(trashIcon);
+    auto trashImage = juce::ImageCache::getFromMemory(BinaryData::TrashIcon_png, BinaryData::TrashIcon_pngSize);
     
-    // Draw a simple trash can icon in the image
-    g.setColour(juce::Colours::darkgrey);
-    g.fillRoundedRectangle(10.0f, 15.0f, trashSize - 20.0f, trashSize - 25.0f, 5.0f);
-    g.setColour(juce::Colours::lightgrey);
-    g.drawRoundedRectangle(10.0f, 15.0f, trashSize - 20.0f, trashSize - 25.0f, 5.0f, 2.0f);
-    g.fillRoundedRectangle(5.0f, 10.0f, trashSize - 10.0f, 8.0f, 2.0f);
-    g.fillRect((trashSize / 2) - 3, 5, 6, 8);
-    
-    // Add some lines to make it look more like a trash can
-    g.setColour(juce::Colours::black);
-    for (int i = 1; i < 4; ++i)
+    if (! trashImage.isNull())
     {
-        float x = 10.0f + (i * (trashSize - 20.0f) / 4);
-        g.drawLine(x, 18.0f, x, trashSize - 15.0f, 1.0f);
+        trashIcon.setImage(trashImage, juce::Justification::centred);
+        int trashHeight = 60;
+        trashIcon.setSize(trashImage.getWidth() * trashHeight / trashImage.getHeight(), trashHeight);
+    }
+    else
+    {
+        jassert (!trashImage.isNull()); // Ensure logo image is loaded correctly
+        juce::Logger::writeToLog("Trash image is null - could not load from BinaryData");
     }
     
     isHighlightingTrash = false;
+    
+    addAndMakeVisible(trashIcon);
 }
 
 CenterCanvas::~CenterCanvas()
@@ -156,8 +152,32 @@ void CenterCanvas::paint(juce::Graphics& g)
         }
     }
     
-    // Draw the trash icon
-    drawTrashIcon(g);
+    // Draw trash icon with rounded rectangle
+    const int trashSize = 60;
+    const int padding = 10;
+    const int verticalOffset = 8; // Add vertical offset to move rectangle down
+    
+    // Draw a rounded rectangle around the trash icon - moved down by verticalOffset
+    juce::Rectangle<float> trashBounds = deleteArea.toFloat().expanded(padding).translated(0, verticalOffset);
+    float cornerSize = 12.0f;
+    
+    // Change color based on hover state
+    g.setColour(isHighlightingTrash ? juce::Colours::red.withAlpha(0.6f) : juce::Colours::darkgrey.withAlpha(0.5f));
+    g.fillRoundedRectangle(trashBounds, cornerSize);
+    
+    // Add a border with stronger color
+    g.setColour(isHighlightingTrash ? juce::Colours::red : juce::Colours::darkgrey);
+    g.drawRoundedRectangle(trashBounds, cornerSize, 2.0f);
+    
+    // Add a "Trash" label beneath the icon - also move down by the same offset
+    g.setColour(isHighlightingTrash ? juce::Colours::white : juce::Colours::lightgrey);
+    g.setFont(juce::Font(12.0f, juce::Font::bold));
+    g.drawText("Trash", 
+               deleteArea.getX() - padding, 
+               deleteArea.getBottom() - 14 + verticalOffset,
+               deleteArea.getWidth() + padding * 2,
+               20,
+               juce::Justification::centred, true);
 }
 
 void CenterCanvas::resized()
@@ -169,11 +189,11 @@ void CenterCanvas::resized()
         block->setBounds(block->getBounds()); // Keep the current bounds
     }
     
-    // Update the delete area position (bottom right corner) and make it larger
     const int trashSize = 60;
-    deleteArea = juce::Rectangle<int>(getWidth() - trashSize - 20, 
+    deleteArea = juce::Rectangle<int>(getWidth() - trashSize - 20,
                                      getHeight() - trashSize - 20,
                                      trashSize, trashSize);
+    trashIcon.setBounds(deleteArea);
 }
 
 //==============================================================================
@@ -558,78 +578,13 @@ void CenterCanvas::blockMoved()
     repaint();
 }
 
-void CenterCanvas::drawTrashIcon(juce::Graphics& g)
-{
-    // Make the trash icon more visible and noticeable
-    juce::Rectangle<float> area = deleteArea.toFloat();
-    
-    // Fill with a more attention-grabbing color scheme
-    g.setColour(isHighlightingTrash ? juce::Colours::red.withAlpha(0.6f) : juce::Colours::darkgrey.withAlpha(0.5f));
-    g.fillRoundedRectangle(area.expanded(20.0f), 12.0f);
-    
-    // Draw a more distinct border
-    g.setColour(isHighlightingTrash ? juce::Colours::red : juce::Colours::black);
-    g.drawRoundedRectangle(area.expanded(20.0f), 12.0f, 3.0f);
-
-    // Draw the trash icon
-    if (trashIcon.isValid())
-    {
-        g.drawImageWithin(trashIcon, deleteArea.getX(), deleteArea.getY(),
-                         deleteArea.getWidth(), deleteArea.getHeight() - 20, // Leave space for label
-                         juce::RectanglePlacement::centred);
-        
-        // Add a "Trash" label
-        g.setColour(juce::Colours::black);
-        g.setFont(12.0f);
-        g.drawText("Trash", 
-                  deleteArea.getX(), deleteArea.getBottom() - 20,
-                  deleteArea.getWidth(), 20,
-                  juce::Justification::centred, true);
-    }
-    else
-    {
-        // Fallback if image isn't valid
-        juce::Rectangle<float> iconBounds = deleteArea.toFloat().reduced(10.0f);
-        iconBounds.removeFromBottom(20.0f);  // Leave space for the label
-        
-        g.setColour(juce::Colours::darkgrey);
-        
-        // Draw trash can body
-        g.fillRoundedRectangle(iconBounds.getX(), iconBounds.getY() + iconBounds.getHeight() * 0.2f,
-                              iconBounds.getWidth(), iconBounds.getHeight() * 0.7f, 5.0f);
-        
-        // Draw trash can lid
-        g.fillRoundedRectangle(iconBounds.getX() - 5.0f, iconBounds.getY() + iconBounds.getHeight() * 0.1f,
-                              iconBounds.getWidth() + 10.0f, iconBounds.getHeight() * 0.1f, 2.0f);
-        
-        // Draw handle
-        g.fillRoundedRectangle(iconBounds.getCentreX() - 5.0f, iconBounds.getY(),
-                              10.0f, iconBounds.getHeight() * 0.15f, 2.0f);
-        
-        // Add some lines inside the trash can
-        g.setColour(juce::Colours::lightgrey);
-        float lineSpacing = iconBounds.getWidth() / 4.0f;
-        for (int i = 1; i < 4; ++i)
-        {
-            float x = iconBounds.getX() + i * lineSpacing;
-            g.drawLine(x, iconBounds.getY() + iconBounds.getHeight() * 0.25f,
-                      x, iconBounds.getY() + iconBounds.getHeight() * 0.85f, 1.0f);
-        }
-        
-        // Add "Trash" text label
-        g.setColour(juce::Colours::black);
-        g.setFont(14.0f);
-        g.drawText("Trash", 
-                  deleteArea.getX(), deleteArea.getBottom() - 20,
-                  deleteArea.getWidth(), 20,
-                  juce::Justification::centred, true);
-    }
-}
-
 bool CenterCanvas::isPointInDeleteArea(const juce::Point<int>& point) const
 {
-    // Use a significantly enlarged delete area for easier targeting
-    auto expandedArea = deleteArea.expanded(30);
+    // Update hit detection area to match the new visually offset rectangle
+    const int verticalOffset = 10; // Same offset as in paint method
+    
+    // Use a significantly enlarged delete area for easier targeting, with the vertical offset applied
+    auto expandedArea = deleteArea.expanded(30).translated(0, verticalOffset);
     bool result = expandedArea.contains(point);
     juce::Logger::writeToLog("Point check x:" + juce::String(point.x) + " y:" + juce::String(point.y) + 
                            " in trash: " + juce::String(result ? "YES" : "NO"));

@@ -87,6 +87,7 @@
 		868707A3278E61794C691443 /* Foundation.framework */ /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		889265B38DED9B5D7B442255 /* MetalKit.framework */ /* MetalKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MetalKit.framework; path = System/Library/Frameworks/MetalKit.framework; sourceTree = SDKROOT; };
 		88985D84768EC954A82595B3 /* BinaryData.h */ /* BinaryData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BinaryData.h; path = ../../JuceLibraryCode/BinaryData.h; sourceTree = SOURCE_ROOT; };
+		8A3E4C11826A0B60A404E9DE /* TrashIcon.png */ /* TrashIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = TrashIcon.png; path = ../../Resources/TrashIcon.png; sourceTree = SOURCE_ROOT; };
 		8C8EE0020C7FF62C732D5BDD /* Security.framework */ /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		8ECDC5830EA51E8746F68B5B /* Info-App.plist */ /* Info-App.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info-App.plist"; path = "Info-App.plist"; sourceTree = SOURCE_ROOT; };
 		8EF012DA724E0860FD90D0A5 /* VisualizersIcon.png */ /* VisualizersIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = VisualizersIcon.png; path = ../../Resources/VisualizersIcon.png; sourceTree = SOURCE_ROOT; };
@@ -257,6 +258,7 @@
 				4CC70AE2B81CE5A738CB0FE3,
 				CD0776DAABF96783D3EF2D85,
 				1A8C17CB173F353E5C7F35AB,
+				8A3E4C11826A0B60A404E9DE,
 				8EF012DA724E0860FD90D0A5,
 			);
 			name = Resources;

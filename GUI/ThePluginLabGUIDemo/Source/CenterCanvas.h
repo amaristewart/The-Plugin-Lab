@@ -86,7 +86,7 @@ private:
     // Grid properties
     int gridSize = 20;
     bool showGrid = true;
-    bool enableGridSnapping = true;
+    bool enableGridSnapping = false;
     
     // Collection of blocks on the canvas
     juce::OwnedArray<BlockComponent> blocks;
@@ -96,17 +96,15 @@ private:
 
     // Delete area properties
     juce::Rectangle<int> deleteArea;
-    juce::Image trashIcon;
     bool isHighlightingTrash = false;
-    
-    // Helper methods for trash area
-    void drawTrashIcon(juce::Graphics& g);
+    juce::ImageComponent trashIcon;
 
     // Track highlighted connection for visual feedback
     int highlightedConnectionIndex = -1;
 
     // Add a tracked dragging block pointer
     BlockComponent* currentlyDraggedCanvasBlock = nullptr;
+    
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(CenterCanvas)
 };

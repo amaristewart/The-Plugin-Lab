@@ -30,6 +30,7 @@
       <FILE id="LYB4q4" name="QComponent.png" compile="0" resource="1" file="Resources/QComponent.png"/>
       <FILE id="akezkH" name="TemplatesIcon.png" compile="0" resource="1"
             file="Resources/TemplatesIcon.png"/>
+      <FILE id="sOjryO" name="TrashIcon.png" compile="0" resource="1" file="Resources/TrashIcon.png"/>
       <FILE id="TfJmVR" name="VisualizersIcon.png" compile="0" resource="1"
             file="Resources/VisualizersIcon.png"/>
     </GROUP>

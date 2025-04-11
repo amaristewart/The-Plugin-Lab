@@ -56,11 +56,14 @@ namespace BinaryData
     extern const char*   TemplatesIcon_png;
     const int            TemplatesIcon_pngSize = 67418;
 
+    extern const char*   TrashIcon_png;
+    const int            TrashIcon_pngSize = 77374;
+
     extern const char*   VisualizersIcon_png;
     const int            VisualizersIcon_pngSize = 74598;
 
     // Number of elements in the namedResourceList and originalFileNames arrays.
-    const int namedResourceListSize = 17;
+    const int namedResourceListSize = 18;
 
     // Points to the start of a list of resource names.
     extern const char* namedResourceList[];
