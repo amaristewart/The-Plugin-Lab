@@ -168,16 +168,6 @@ void CenterCanvas::paint(juce::Graphics& g)
     // Add a border with stronger color
     g.setColour(isHighlightingTrash ? juce::Colours::red : juce::Colours::darkgrey);
     g.drawRoundedRectangle(trashBounds, cornerSize, 2.0f);
-    
-    // Add a "Trash" label beneath the icon - also move down by the same offset
-    g.setColour(isHighlightingTrash ? juce::Colours::white : juce::Colours::lightgrey);
-    g.setFont(juce::Font(12.0f, juce::Font::bold));
-    g.drawText("Trash", 
-               deleteArea.getX() - padding, 
-               deleteArea.getBottom() - 14 + verticalOffset,
-               deleteArea.getWidth() + padding * 2,
-               20,
-               juce::Justification::centred, true);
 }
 
 void CenterCanvas::resized()
@@ -190,10 +180,17 @@ void CenterCanvas::resized()
     }
     
     const int trashSize = 60;
+    const int verticalOffset = 8; // Add this vertical offset to move the trash icon down
+    
     deleteArea = juce::Rectangle<int>(getWidth() - trashSize - 20,
                                      getHeight() - trashSize - 20,
                                      trashSize, trashSize);
-    trashIcon.setBounds(deleteArea);
+    
+    // Move the trash icon down by applying the vertical offset
+    trashIcon.setBounds(deleteArea.getX(), 
+                       deleteArea.getY() + verticalOffset, 
+                       deleteArea.getWidth(), 
+                       deleteArea.getHeight());
 }
 
 //==============================================================================
@@ -353,8 +350,26 @@ void CenterCanvas::itemDropped(const SourceDetails& dragSourceDetails)
                 }
             }
             
-            // Create a new block at the drop position
-            auto* newBlock = new BlockComponent(blockName, blockColour);
+            // Create a new block at the drop position - preserve the image if it has one
+            BlockComponent* newBlock = nullptr;
+            
+            // Check if the dragged block has an image and preserve it
+            if (draggedBlock->hasImage)
+            {
+                juce::Image blockImage = draggedBlock->getImage(); // You'll need to add this getter
+                newBlock = new BlockComponent(blockName, blockColour, blockImage);
+            }
+            else
+            {
+                newBlock = new BlockComponent(blockName, blockColour);
+            }
+            
+            // Set block size based on whether it has an image
+            if (draggedBlock->hasImage)
+            {
+                // Use the original size from the sidebar without increasing it
+                newBlock->setSize(draggedBlock->getWidth(), draggedBlock->getHeight());
+            }
             
             // Calculate the position, accounting for offset
             juce::Point<int> dropPos(dragSourceDetails.localPosition.x - newBlock->getWidth()/2,
@@ -373,6 +388,23 @@ void CenterCanvas::itemDropped(const SourceDetails& dragSourceDetails)
             newBlock->setBounds(dropPos.x, dropPos.y, newBlock->getWidth(), newBlock->getHeight());
             addAndMakeVisible(newBlock);
             blocks.add(newBlock);
+            
+            // Add text entry for Frequency, Q, and Gain blocks - AFTER adding to canvas
+            // Note: This needs to happen after adding to canvas so the parent coordinates are correct
+            if (blockName == "Frequency" || blockName == "Q" || blockName == "Gain")
+            {
+                // Force an immediate repaint before adding text entry
+                repaint();
+                
+                // Add text entry with small delay to ensure component is properly set up
+                juce::Timer::callAfterDelay(100, [this, newBlock]() {
+                    if (blocks.contains(newBlock) && isShowing())
+                    {
+                        newBlock->addTextEntryIfNeeded();
+                        repaint();
+                    }
+                });
+            }
             
             juce::Logger::writeToLog("Created new block on canvas: " + blockName);
             repaint();
@@ -595,6 +627,9 @@ void CenterCanvas::removeBlock(BlockComponent* blockToRemove)
 {
     if (blockToRemove != nullptr)
     {
+        // First ensure the block cleans up any external text boxes
+        blockToRemove->prepareForDeletion();
+        
         // First remove any connections involving this block
         for (int i = connections.size() - 1; i >= 0; --i)
         {

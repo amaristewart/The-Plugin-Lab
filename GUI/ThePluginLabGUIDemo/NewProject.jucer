@@ -4,6 +4,8 @@
               addUsingNamespaceToJuceHeader="0" jucerFormatVersion="1">
   <MAINGROUP id="UgFQfO" name="ThePluginLabGUIDemo">
     <GROUP id="{4329582A-FF7C-E989-D818-0D76B20036B6}" name="Resources">
+      <FILE id="zQqHKH" name="ButtonComponent.png" compile="0" resource="1"
+            file="Resources/ButtonComponent.png"/>
       <FILE id="TOqYYq" name="CodeIcon.png" compile="0" resource="1" file="Resources/CodeIcon.png"/>
       <FILE id="aTocuY" name="CustomizationIcon.png" compile="0" resource="1"
             file="Resources/CustomizationIcon.png"/>
@@ -17,6 +19,8 @@
       <FILE id="WmCQWh" name="GUIIcon.png" compile="0" resource="1" file="Resources/GUIIcon.png"/>
       <FILE id="H9tBUy" name="HighpassComponent.png" compile="0" resource="1"
             file="Resources/HighpassComponent.png"/>
+      <FILE id="G3H575" name="KnobComponent.png" compile="0" resource="1"
+            file="Resources/KnobComponent.png"/>
       <FILE id="f9KxDb" name="LearnIcon.png" compile="0" resource="1" file="Resources/LearnIcon.png"/>
       <FILE id="HlDqiM" name="logo.png" compile="0" resource="1" file="Resources/logo.png"/>
       <FILE id="fVTxaR" name="LowpassComponent.png" compile="0" resource="1"
@@ -28,6 +32,8 @@
       <FILE id="XC6J70" name="ProjectsIcon.png" compile="0" resource="1"
             file="Resources/ProjectsIcon.png"/>
       <FILE id="LYB4q4" name="QComponent.png" compile="0" resource="1" file="Resources/QComponent.png"/>
+      <FILE id="D3wDaT" name="SliderComponent.png" compile="0" resource="1"
+            file="Resources/SliderComponent.png"/>
       <FILE id="akezkH" name="TemplatesIcon.png" compile="0" resource="1"
             file="Resources/TemplatesIcon.png"/>
       <FILE id="sOjryO" name="TrashIcon.png" compile="0" resource="1" file="Resources/TrashIcon.png"/>
@@ -39,11 +45,6 @@
           file="MainComponent.cpp"/>
     <FILE id="TtRP0i" name="MainComponent.h" compile="0" resource="0" file="MainComponent.h"/>
     <GROUP id="{21DDE12C-BBD3-A7D0-2187-FEFE5C89F0DB}" name="Source">
-      <GROUP id="{F04C6F90-79C2-49F6-D659-5CC34A88BA5D}" name="EQ">
-        <FILE id="ADSm5O" name="EQComponents.h" compile="0" resource="0" file="Source/EQ/EQComponents.h"/>
-        <FILE id="grUHwW" name="EQPanel.cpp" compile="1" resource="0" file="Source/EQ/EQPanel.cpp"/>
-        <FILE id="RVOw8W" name="EQPanel.h" compile="0" resource="0" file="Source/EQ/EQPanel.h"/>
-      </GROUP>
       <FILE id="V4nfFH" name="PencilEffect.h" compile="0" resource="0" file="Source/PencilEffect.h"/>
       <FILE id="PrwUOd" name="Block.cpp" compile="1" resource="0" file="Source/Block.cpp"/>
       <FILE id="TqmGn6" name="CustomShapeButton.h" compile="0" resource="0"
@@ -80,7 +81,7 @@
   </MODULES>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1"/>
   <EXPORTFORMATS>
-    <XCODE_MAC targetFolder="Builds/MacOSX">
+    <XCODE_MAC targetFolder="Builds/MacOSX" smallIcon="HlDqiM" bigIcon="HlDqiM">
       <CONFIGURATIONS>
         <CONFIGURATION isDebug="1" name="Debug" targetName="NewProject"/>
         <CONFIGURATION isDebug="0" name="Release" targetName="NewProject"/>

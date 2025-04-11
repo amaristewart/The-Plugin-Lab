@@ -22,11 +22,20 @@ public:
     juce::String getPluginName() const;
 
 private:
-    juce::TextButton projectsButton { "Projects" };
-    juce::TextButton templatesButton { "Templates" };
-    juce::TextButton learnButton { "Learn" };
+    // Replace TextButtons with ImageButtons
+    juce::ImageButton projectsButton;
+    juce::ImageButton templatesButton;
+    juce::ImageButton learnButton;
+    
     juce::TextEditor pluginNameEditor;
     juce::ImageComponent logoComponent;
+    juce::ImageComponent pluginNameIconComponent;
+    
+    // Helper method to create placeholder button images if binary data isn't available
+    juce::Image createPlaceholderButtonImage(const juce::String& label, juce::Colour colour);
+    
+    // Helper method to draw custom backgrounds for buttons
+    void drawButtonBackground(juce::Graphics& g, const juce::ImageButton& button, juce::Colour baseColour);
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TopNavigationBar)
 };

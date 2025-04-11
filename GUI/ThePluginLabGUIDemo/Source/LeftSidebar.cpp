@@ -4,7 +4,23 @@
 //==============================================================================
 LeftSidebar::LeftSidebar()
 {
-    // Add overarching tabs (smaller size)
+    // Load tab images from BinaryData
+    auto codeTabImage = juce::ImageCache::getFromMemory(BinaryData::CodeIcon_png, BinaryData::CodeIcon_pngSize);
+    auto customizationTabImage = juce::ImageCache::getFromMemory(BinaryData::CustomizationIcon_png, BinaryData::CustomizationIcon_pngSize);
+    
+    // Create placeholder images if the BinaryData resources aren't available
+    if (codeTabImage.isNull())
+        codeTabImage = createTabImage("Code", juce::Colours::darkblue);
+        
+    if (customizationTabImage.isNull())
+        customizationTabImage = createTabImage("Customization", juce::Colours::darkgreen);
+    
+    // Configure the tabs with custom drawing that shows the images
+    overarchingTabs.setLookAndFeel(&tabLookAndFeel);
+    tabLookAndFeel.setTabImage(0, codeTabImage);
+    tabLookAndFeel.setTabImage(1, customizationTabImage);
+    
+    // Add overarching tabs with actual names (required by jassert check)
     overarchingTabs.addTab("Code", juce::Colours::white, -1);
     overarchingTabs.addTab("Customization", juce::Colours::white, -1);
     addAndMakeVisible(overarchingTabs);
@@ -125,24 +141,57 @@ juce::Image LeftSidebar::createPlaceholderIcon(const juce::String& label, juce::
     return icon;
 }
 
+// Helper method to create placeholder tab images if binary resources aren't available
+juce::Image LeftSidebar::createTabImage(const juce::String& label, juce::Colour colour)
+{
+    juce::Image icon(juce::Image::ARGB, 120, 30, true);
+    juce::Graphics g(icon);
+    
+    // Make icon transparent initially
+    g.setColour(juce::Colours::transparentBlack);
+    g.fillAll();
+    
+    // Fill a rounded rectangle for the tab
+    g.setColour(colour);
+    g.fillRoundedRectangle(0.0f, 0.0f, (float)icon.getWidth(), (float)icon.getHeight(), 12.0f);
+    
+    // Add a subtle border
+    g.setColour(juce::Colours::white.withAlpha(0.5f));
+    g.drawRoundedRectangle(0.0f, 0.0f, (float)icon.getWidth(), (float)icon.getHeight(), 12.0f, 1.0f);
+    
+    // Draw text
+    g.setFont(16.0f);
+    g.setColour(juce::Colours::white);
+    g.drawText(label, 0, 0, icon.getWidth(), icon.getHeight(), juce::Justification::centred, true);
+    
+    return icon;
+}
+
 LeftSidebar::~LeftSidebar()
 {
     // Clean up
     overarchingTabs.removeChangeListener(this);
+    overarchingTabs.setLookAndFeel(nullptr);
 }
 
 void LeftSidebar::paint(juce::Graphics& g)
 {
-    g.fillAll(juce::Colour::fromRGB(240, 240, 240)); // Light grey background
+    // Change background to white
+    g.fillAll(juce::Colours::white);
     
     // Draw a divider line between the category buttons and block list
-    g.setColour(juce::Colours::grey.withAlpha(0.5f));
+    g.setColour(juce::Colours::grey.withAlpha(0.3f));
     
     // Draw vertical divider line between tab column and blocks area
     g.drawLine(50.0f, 30.0f, 50.0f, float(getHeight()), 1.0f);
     
     // Draw horizontal divider under the tabs
     g.drawLine(0.0f, 30.0f, float(getWidth()), 30.0f, 1.0f);
+    
+    // Draw a vertical divider line at the right edge of the sidebar
+    // Use a slightly darker color for better visibility
+    g.setColour(juce::Colours::grey.withAlpha(0.5f));
+    g.drawLine(float(getWidth() - 1), 0.0f, float(getWidth() - 1), float(getHeight()), 1.5f);
 }
 
 void LeftSidebar::resized()
@@ -178,18 +227,18 @@ void LeftSidebar::resized()
     // Layout the viewport for blocks in the remaining area
     viewport.setBounds(blocksArea);
     
-    // Calculate total height needed for all blocks
-    int totalBlockHeight = blockComponents.size() * (blockHeight + 10);
-    blockListComponent.setBounds(0, 0, viewport.getWidth() - viewport.getScrollBarThickness(), 
-                               std::max(viewport.getHeight(), totalBlockHeight));
-    
-    // Position each block in the list
+    // Position each block in the list with their own heights
     int y = 10;
     for (auto* blockComp : blockComponents)
     {
+        int blockHeight = blockComp->getHeight(); // Use component's actual height
         blockComp->setBounds(5, y, viewport.getWidth() - 15 - viewport.getScrollBarThickness(), blockHeight);
         y += blockHeight + 10;
     }
+    
+    // Update the list component size
+    blockListComponent.setBounds(0, 0, viewport.getWidth() - viewport.getScrollBarThickness(), 
+                               std::max(viewport.getHeight(), y));
 }
 
 void LeftSidebar::addBlock(const juce::String& name, juce::Colour colour)
@@ -219,12 +268,78 @@ void LeftSidebar::updateBlocksForCategory(const juce::String& category)
     }
     else if (category == "EQ")
     {
-        addBlockToCategory("Highpass", juce::Colour::fromRGB(250, 144, 167));
-        addBlockToCategory("Lowpass", juce::Colour::fromRGB(250, 144, 167));
-        addBlockToCategory("Peaking", juce::Colour::fromRGB(250, 144, 167));
-        addBlockToCategory("Frequency", juce::Colour::fromRGB(254, 204, 214));
-        addBlockToCategory("Q", juce::Colour::fromRGB(254, 204, 214));
-        addBlockToCategory("Gain", juce::Colour::fromRGB(254, 204, 214));
+        // Load EQ binary data images
+        auto highpassImage = juce::ImageCache::getFromMemory(BinaryData::HighpassComponent_png, BinaryData::HighpassComponent_pngSize);
+        auto lowpassImage = juce::ImageCache::getFromMemory(BinaryData::LowpassComponent_png, BinaryData::LowpassComponent_pngSize);
+        auto peakingImage = juce::ImageCache::getFromMemory(BinaryData::PeakingComponent_png, BinaryData::PeakingComponent_pngSize);
+        auto frequencyImage = juce::ImageCache::getFromMemory(BinaryData::FrequencyComponent_png, BinaryData::FrequencyComponent_pngSize);
+        auto qImage = juce::ImageCache::getFromMemory(BinaryData::QComponent_png, BinaryData::QComponent_pngSize);
+        auto gainImage = juce::ImageCache::getFromMemory(BinaryData::GainComponent_png, BinaryData::GainComponent_pngSize);
+        
+        // Increase size for EQ blocks
+        const int eqBlockWidth = viewport.getWidth() - 25 - viewport.getScrollBarThickness();
+        const int eqBlockHeight = 80; // Increased from standard height
+        
+        // Check if images loaded successfully, otherwise use colors
+        if (!highpassImage.isNull())
+        {
+            auto* blockComp = new BlockComponent("Highpass", juce::Colour::fromRGB(250, 144, 167), highpassImage);
+            blockComp->setSize(eqBlockWidth, eqBlockHeight);
+            blockListComponent.addAndMakeVisible(blockComp);
+            blockComponents.add(blockComp);
+        }
+        else
+            addBlockToCategory("Highpass", juce::Colour::fromRGB(250, 144, 167));
+            
+        if (!lowpassImage.isNull())
+        {
+            auto* blockComp = new BlockComponent("Lowpass", juce::Colour::fromRGB(250, 144, 167), lowpassImage);
+            blockComp->setSize(eqBlockWidth, eqBlockHeight);
+            blockListComponent.addAndMakeVisible(blockComp);
+            blockComponents.add(blockComp);
+        }
+        else
+            addBlockToCategory("Lowpass", juce::Colour::fromRGB(250, 144, 167));
+            
+        if (!peakingImage.isNull())
+        {
+            auto* blockComp = new BlockComponent("Peaking", juce::Colour::fromRGB(250, 144, 167), peakingImage);
+            blockComp->setSize(eqBlockWidth, eqBlockHeight);
+            blockListComponent.addAndMakeVisible(blockComp);
+            blockComponents.add(blockComp);
+        }
+        else
+            addBlockToCategory("Peaking", juce::Colour::fromRGB(250, 144, 167));
+            
+        if (!frequencyImage.isNull())
+        {
+            auto* blockComp = new BlockComponent("Frequency", juce::Colour::fromRGB(254, 204, 214), frequencyImage);
+            blockComp->setSize(eqBlockWidth, eqBlockHeight);
+            blockListComponent.addAndMakeVisible(blockComp);
+            blockComponents.add(blockComp);
+        }
+        else
+            addBlockToCategory("Frequency", juce::Colour::fromRGB(254, 204, 214));
+            
+        if (!qImage.isNull())
+        {
+            auto* blockComp = new BlockComponent("Q", juce::Colour::fromRGB(254, 204, 214), qImage);
+            blockComp->setSize(eqBlockWidth, eqBlockHeight);
+            blockListComponent.addAndMakeVisible(blockComp);
+            blockComponents.add(blockComp);
+        }
+        else
+            addBlockToCategory("Q", juce::Colour::fromRGB(254, 204, 214));
+            
+        if (!gainImage.isNull())
+        {
+            auto* blockComp = new BlockComponent("Gain", juce::Colour::fromRGB(254, 204, 214), gainImage);
+            blockComp->setSize(eqBlockWidth, eqBlockHeight);
+            blockListComponent.addAndMakeVisible(blockComp);
+            blockComponents.add(blockComp);
+        }
+        else
+            addBlockToCategory("Gain", juce::Colour::fromRGB(254, 204, 214));
     }
     else if (category == "Dynamics")
     {
@@ -246,8 +361,20 @@ void LeftSidebar::updateBlocksForCategory(const juce::String& category)
         addBlockToCategory("Meter", juce::Colour::fromRGB(187, 91, 187));
     }
     
-    // Update layout
-    resized();
+    // Update layout with potentially different block heights
+    int y = 10;
+    for (auto* blockComp : blockComponents)
+    {
+        // Use block's actual height instead of standard height
+        int blockHeight = blockComp->getHeight();
+        blockComp->setBounds(5, y, viewport.getWidth() - 15 - viewport.getScrollBarThickness(), blockHeight);
+        y += blockHeight + 10;
+    }
+    
+    // Update total height calculation for the component
+    int totalHeight = y;
+    blockListComponent.setBounds(0, 0, viewport.getWidth() - viewport.getScrollBarThickness(), 
+                               std::max(viewport.getHeight(), totalHeight));
 }
 
 void LeftSidebar::updateCategoryButtonsVisibility()

@@ -8,11 +8,14 @@
 
 namespace BinaryData
 {
+    extern const char*   ButtonComponent_png;
+    const int            ButtonComponent_pngSize = 203352;
+
     extern const char*   CodeIcon_png;
-    const int            CodeIcon_pngSize = 79689;
+    const int            CodeIcon_pngSize = 148551;
 
     extern const char*   CustomizationIcon_png;
-    const int            CustomizationIcon_pngSize = 50139;
+    const int            CustomizationIcon_pngSize = 158531;
 
     extern const char*   DynamicsIcon_png;
     const int            DynamicsIcon_pngSize = 71739;
@@ -32,8 +35,11 @@ namespace BinaryData
     extern const char*   HighpassComponent_png;
     const int            HighpassComponent_pngSize = 174458;
 
+    extern const char*   KnobComponent_png;
+    const int            KnobComponent_pngSize = 195384;
+
     extern const char*   LearnIcon_png;
-    const int            LearnIcon_pngSize = 63852;
+    const int            LearnIcon_pngSize = 110449;
 
     extern const char*   logo_png;
     const int            logo_pngSize = 121758;
@@ -48,22 +54,25 @@ namespace BinaryData
     const int            PluginNameIcon_pngSize = 53511;
 
     extern const char*   ProjectsIcon_png;
-    const int            ProjectsIcon_pngSize = 59184;
+    const int            ProjectsIcon_pngSize = 142266;
 
     extern const char*   QComponent_png;
     const int            QComponent_pngSize = 175273;
 
+    extern const char*   SliderComponent_png;
+    const int            SliderComponent_pngSize = 343966;
+
     extern const char*   TemplatesIcon_png;
-    const int            TemplatesIcon_pngSize = 67418;
+    const int            TemplatesIcon_pngSize = 156024;
 
     extern const char*   TrashIcon_png;
-    const int            TrashIcon_pngSize = 77374;
+    const int            TrashIcon_pngSize = 95382;
 
     extern const char*   VisualizersIcon_png;
     const int            VisualizersIcon_pngSize = 74598;
 
     // Number of elements in the namedResourceList and originalFileNames arrays.
-    const int namedResourceListSize = 18;
+    const int namedResourceListSize = 21;
 
     // Points to the start of a list of resource names.
     extern const char* namedResourceList[];
