@@ -3,7 +3,7 @@
 #include <JuceHeader.h>
 
 class TopNavigationBar : public juce::Component,
-                         private juce::Timer
+                         public juce::Timer
 {
 public:
     TopNavigationBar();
@@ -12,22 +12,21 @@ public:
     void paint(juce::Graphics& g) override;
     void resized() override;
     
-    // Add a method to reload the logo after it's been created
-    void reloadLogo();
-    
-private:
-    // Timer callback to allow for asynchronous logo loading
+    // Timer callback - implement this to satisfy the non-abstract requirement
     void timerCallback() override;
     
-    // Helper methods for logo handling
-    void loadLogo();
-    void createFallbackLogo();
+    // Method to set the plugin name
+    void setPluginName(const juce::String& name);
     
-    juce::TextButton projectsButton;
-    juce::TextButton templatesButton;
-    juce::TextButton learnButton;
-    juce::TextEditor pluginNameEditor;
-    juce::Image logoImage; // Member variable to hold the logo image
+    // Method to get the plugin name
+    juce::String getPluginName() const;
 
+private:
+    juce::TextButton projectsButton { "Projects" };
+    juce::TextButton templatesButton { "Templates" };
+    juce::TextButton learnButton { "Learn" };
+    juce::TextEditor pluginNameEditor;
+    juce::ImageComponent logoComponent;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TopNavigationBar)
 };

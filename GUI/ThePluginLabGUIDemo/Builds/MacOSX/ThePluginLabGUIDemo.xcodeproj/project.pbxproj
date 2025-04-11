@@ -15,7 +15,6 @@
 		3AC295D7C5E0AB07E917C51D /* BinaryData.cpp */ = {isa = PBXBuildFile; fileRef = 93F71959A0FEEAFBB9B86211; };
 		4076ACB9AAA0322BD11A9333 /* CenterCanvas.cpp */ = {isa = PBXBuildFile; fileRef = 69485FBE880484A1802346A9; };
 		40929FA0426DFF7CB63E4454 /* IOKit.framework */ = {isa = PBXBuildFile; fileRef = 01175A707E278F8B82441801; };
-		46F41A67036924DB8254FB0E /* RightSidebar.cpp */ = {isa = PBXBuildFile; fileRef = D3ED3EBE443D8B1FCA54D815; };
 		4A1E1817904E85A6D4301538 /* BottomPanel.cpp */ = {isa = PBXBuildFile; fileRef = 378A3B9C5B76B06C128926C3; };
 		510C149E6ADF0645BED83ECA /* include_juce_graphics_Sheenbidi.c */ = {isa = PBXBuildFile; fileRef = 0CF586453542039EDA0BC3E5; };
 		6B675CF5B1EEB83A2284633A /* EQPanel.cpp */ = {isa = PBXBuildFile; fileRef = BC7B0691E9D1310313128AAA; };
@@ -61,7 +60,6 @@
 		2AC733B994A6CFCF15E5B78B /* GUIIcon.png */ /* GUIIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = GUIIcon.png; path = ../../Resources/GUIIcon.png; sourceTree = SOURCE_ROOT; };
 		30646085444CB0AED6B4D3D9 /* juce_animation */ /* juce_animation */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_animation; path = /Users/amaristewart/Documents/JUCE/modules/juce_animation; sourceTree = "<absolute>"; };
 		30853800F30D3BA005F7BE8F /* include_juce_graphics_Harfbuzz.cpp */ /* include_juce_graphics_Harfbuzz.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_graphics_Harfbuzz.cpp; path = ../../JuceLibraryCode/include_juce_graphics_Harfbuzz.cpp; sourceTree = SOURCE_ROOT; };
-		31C2ECE4DEB0B8A9612CCD35 /* RightSidebar.h */ /* RightSidebar.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = RightSidebar.h; path = ../../Source/RightSidebar.h; sourceTree = SOURCE_ROOT; };
 		37074B2BD8239574816D0962 /* juce_gui_basics */ /* juce_gui_basics */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_gui_basics; path = /Users/amaristewart/Documents/JUCE/modules/juce_gui_basics; sourceTree = "<absolute>"; };
 		378A3B9C5B76B06C128926C3 /* BottomPanel.cpp */ /* BottomPanel.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = BottomPanel.cpp; path = ../../Source/BottomPanel.cpp; sourceTree = SOURCE_ROOT; };
 		3844BFA04DCD0540DA96BE20 /* GainComponent.png */ /* GainComponent.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = GainComponent.png; path = ../../Resources/GainComponent.png; sourceTree = SOURCE_ROOT; };
@@ -113,7 +111,6 @@
 		CD02A530A1FA1FC065408FAA /* Block.h */ /* Block.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Block.h; path = ../../Source/Block.h; sourceTree = SOURCE_ROOT; };
 		CD0776DAABF96783D3EF2D85 /* QComponent.png */ /* QComponent.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = QComponent.png; path = ../../Resources/QComponent.png; sourceTree = SOURCE_ROOT; };
 		CFBA3383E6D9911121F34965 /* TopNavigationBar.cpp */ /* TopNavigationBar.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = TopNavigationBar.cpp; path = ../../Source/TopNavigationBar.cpp; sourceTree = SOURCE_ROOT; };
-		D3ED3EBE443D8B1FCA54D815 /* RightSidebar.cpp */ /* RightSidebar.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = RightSidebar.cpp; path = ../../Source/RightSidebar.cpp; sourceTree = SOURCE_ROOT; };
 		D93E09A2AF18A3E64ED269A3 /* EQIcon.png */ /* EQIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = EQIcon.png; path = ../../Resources/EQIcon.png; sourceTree = SOURCE_ROOT; };
 		D997BC0BCFA8289C8A92145B /* juce_core */ /* juce_core */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_core; path = /Users/amaristewart/Documents/JUCE/modules/juce_core; sourceTree = "<absolute>"; };
 		DBF479E2652B664BE91715FD /* Accelerate.framework */ /* Accelerate.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Accelerate.framework; path = System/Library/Frameworks/Accelerate.framework; sourceTree = SDKROOT; };
@@ -167,8 +164,6 @@
 				4302CEEFD86C2A5F0F4FCCD4,
 				0091F1711F61FFBEE977EBF4,
 				EAAF755C1939D74E336B13E8,
-				D3ED3EBE443D8B1FCA54D815,
-				31C2ECE4DEB0B8A9612CCD35,
 				CFBA3383E6D9911121F34965,
 				5CBCE34C014B564B129AF9FE,
 				DD6117B6FB0BAC6E23E0B70A,
@@ -403,7 +398,6 @@
 				4A1E1817904E85A6D4301538,
 				4076ACB9AAA0322BD11A9333,
 				BB2FDF6DC37FD058B8E84390,
-				46F41A67036924DB8254FB0E,
 				6BC16FF45727D6139CB29F3F,
 				3AC295D7C5E0AB07E917C51D,
 				6E00BD59A649A45BCC768128,

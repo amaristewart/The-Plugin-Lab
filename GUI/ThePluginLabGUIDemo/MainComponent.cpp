@@ -17,9 +17,6 @@ MainComponent::MainComponent() :
     // Set this component to receive mouse events
     setInterceptsMouseClicks(true, true);
     
-    // Tell the top nav bar to reload the logo (it should be available now)
-    topNavBar.reloadLogo();
-    
     // Set size
     setSize(1200, 800);
 }
