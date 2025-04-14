@@ -54,10 +54,8 @@
       <FILE id="gXuUzN" name="SpectrumVisualizer.h" compile="0" resource="0"
             file="Source/SpectrumVisualizer.h"/>
       <FILE id="V4nfFH" name="PencilEffect.h" compile="0" resource="0" file="Source/PencilEffect.h"/>
-      <FILE id="PrwUOd" name="Block.cpp" compile="1" resource="0" file="Source/Block.cpp"/>
       <FILE id="TqmGn6" name="CustomShapeButton.h" compile="0" resource="0"
             file="Source/CustomShapeButton.h"/>
-      <FILE id="UFBqZY" name="Block.h" compile="0" resource="0" file="Source/Block.h"/>
       <FILE id="hA3rTB" name="BlockComponent.cpp" compile="1" resource="0"
             file="Source/BlockComponent.cpp"/>
       <FILE id="ehd1MN" name="BlockComponent.h" compile="0" resource="0"

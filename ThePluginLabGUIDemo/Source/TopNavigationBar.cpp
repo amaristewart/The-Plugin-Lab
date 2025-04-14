@@ -1,5 +1,4 @@
 #include "TopNavigationBar.h"
-#include "Utilities.h"
 
 //==============================================================================
 // Constructor
