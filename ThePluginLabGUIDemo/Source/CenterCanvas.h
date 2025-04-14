@@ -1,10 +1,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "Block.h"
-
-// Forward declare BlockComponent to avoid circular dependencies
-class BlockComponent;
+#include "BlockComponent.h"
 
 //==============================================================================
 class CenterCanvas : public juce::Component,
