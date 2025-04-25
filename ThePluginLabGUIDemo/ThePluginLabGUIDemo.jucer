@@ -60,8 +60,6 @@
             file="Source/BlockComponent.cpp"/>
       <FILE id="ehd1MN" name="BlockComponent.h" compile="0" resource="0"
             file="Source/BlockComponent.h"/>
-      <FILE id="xXiFl8" name="BottomPanel.cpp" compile="1" resource="0" file="Source/BottomPanel.cpp"/>
-      <FILE id="AUQxdJ" name="BottomPanel.h" compile="0" resource="0" file="Source/BottomPanel.h"/>
       <FILE id="FWXpoH" name="CenterCanvas.cpp" compile="1" resource="0"
             file="Source/CenterCanvas.cpp"/>
       <FILE id="axqG2J" name="CenterCanvas.h" compile="0" resource="0" file="Source/CenterCanvas.h"/>

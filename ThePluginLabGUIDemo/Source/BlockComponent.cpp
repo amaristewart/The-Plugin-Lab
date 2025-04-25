@@ -490,7 +490,9 @@ juce::Point<int> BlockComponent::getConnectorCentre(ConnectorPosition position) 
         case Right:  return rightConnector->getBounds().getCentre();
         case Top:    return topConnector->getBounds().getCentre();
         case Bottom: return bottomConnector->getBounds().getCentre();
-        default:     return leftConnector->getBounds().getCentre(); 
+        default:     return leftConnector->getBounds().getCentre();
+            
+    }
 }
 
 juce::Point<int> BlockComponent::getInputConnectorCentre() const
