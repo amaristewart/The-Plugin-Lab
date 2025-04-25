@@ -103,20 +103,14 @@ void BlockComponent::addTextEntryIfNeeded()
         else if (name == "Gain")
             textEntry->setText("0.0 dB");
             
-        // Configure appearance with stronger colors for visibility
         textEntry->setColour(juce::TextEditor::backgroundColourId, juce::Colours::white);
         textEntry->setColour(juce::TextEditor::outlineColourId, juce::Colours::black);
         textEntry->setColour(juce::TextEditor::textColourId, juce::Colours::black);
         textEntry->setColour(juce::TextEditor::focusedOutlineColourId, juce::Colours::blue);
-        
-        // Make sure text is visibly black by explicitly setting the text color
         textEntry->applyColourToAllText(juce::Colours::black, true);
-        
-        // Use a bold font to make text more readable
         textEntry->setFont(juce::Font(14.0f, juce::Font::bold));
         textEntry->setJustification(juce::Justification::centred);
         
-        // Add to parent directly for better visibility
         if (auto* parent = getParentComponent())
         {
             parent->addAndMakeVisible(textEntry.get());
@@ -127,7 +121,6 @@ void BlockComponent::addTextEntryIfNeeded()
             addAndMakeVisible(textEntry.get());
         }
         
-        // Position the text entry correctly
         positionTextEntry();
     }
 }
@@ -139,9 +132,8 @@ void BlockComponent::positionTextEntry()
         const int textHeight = 25;
         const int margin = 5;
         
-        // Position completely outside the block bounds
         int xPos = getX() + margin;
-        int yPos = getY() + getHeight() + 5; // 5px gap between block and text box
+        int yPos = getY() + getHeight() + 5; 
         int width = getWidth() - (margin * 2);
         
         // Set the bounds in parent coordinate space if added to parent
@@ -155,7 +147,6 @@ void BlockComponent::positionTextEntry()
             textEntry->setBounds(margin, getHeight() + 5, width, textHeight);
         }
         
-        // Make sure the text entry is at the front
         textEntry->toFront(false);
     }
 }
@@ -164,9 +155,7 @@ void BlockComponent::paint(juce::Graphics& g)
 {
     // If we have an image, use it without drawing a background shape
     if (hasImage)
-    {
-        // Draw only the image, filling more of the available space
-        g.drawImageWithin(image,
+    {        g.drawImageWithin(image,
                          0, 0,
                          getWidth(), getHeight(),
                          juce::RectanglePlacement::centred | juce::RectanglePlacement::onlyReduceInSize);
@@ -194,26 +183,20 @@ void BlockComponent::paint(juce::Graphics& g)
     // Draw connectors with white circles and black outlines
     for (const auto& connector : { leftConnector.get(), rightConnector.get(), topConnector.get(), bottomConnector.get() })
     {
-        // Draw white fill
         g.setColour(juce::Colours::white);
         g.fillEllipse(connector->getBounds().toFloat());
         
-        // Draw black outline
         g.setColour(juce::Colours::black);
         g.drawEllipse(connector->getBounds().toFloat(), 1.0f);
     }
     
-    // Draw text entry with more prominent appearance
     if (textEntry != nullptr && textEntry->isVisible())
     {
-        // Draw text entry with more visible background
         auto textBounds = textEntry->getBounds();
         
-        // First draw a more contrasting background to make the text entry more visible
         g.setColour(juce::Colours::white);
         g.fillRoundedRectangle(textBounds.toFloat().expanded(2), 4.0f);
         
-        // Then add a darker border for contrast
         g.setColour(juce::Colours::black);
         g.drawRoundedRectangle(textBounds.toFloat().expanded(2), 4.0f, 1.5f);
     }
@@ -223,10 +206,8 @@ void BlockComponent::resized()
 {
     auto bounds = getLocalBounds();
     
-    // Position the text entry at the bottom if it exists
     positionTextEntry();
     
-    // Create a modified bounds for the main content that excludes the text entry area
     auto mainBounds = bounds;
     if (textEntry != nullptr)
     {
@@ -235,8 +216,6 @@ void BlockComponent::resized()
     
     const int connectorSize = 10;
     
-    // First place all connectors in default positions
-    // Left connector - centered on left edge, touching the edge
     leftConnector->setBounds(
         0,
         mainBounds.getCentreY() - connectorSize/2,
@@ -244,7 +223,6 @@ void BlockComponent::resized()
         connectorSize
     );
     
-    // Right connector - centered on right edge, touching the edge
     rightConnector->setBounds(
         mainBounds.getWidth() - connectorSize,
         mainBounds.getCentreY() - connectorSize/2,
@@ -252,7 +230,6 @@ void BlockComponent::resized()
         connectorSize
     );
     
-    // Top connector - centered on top edge, touching the edge
     topConnector->setBounds(
         mainBounds.getCentreX() - connectorSize/2,
         0,
@@ -260,7 +237,6 @@ void BlockComponent::resized()
         connectorSize
     );
     
-    // Bottom connector - centered on bottom edge, touching the edge
     bottomConnector->setBounds(
         mainBounds.getCentreX() - connectorSize/2,
         mainBounds.getHeight() - connectorSize,
@@ -268,7 +244,6 @@ void BlockComponent::resized()
         connectorSize
     );
     
-    // Now apply specialized positioning based on component type
     if (hasImage)
     {
         // Check if this is an EQ-related block with an image
@@ -302,13 +277,10 @@ void BlockComponent::resized()
 
 void BlockComponent::moved()
 {
-    // Call the base class implementation first
     Component::moved();
     
-    // Reposition any text entry to follow this block
     positionTextEntry();
     
-    // Notify parent if needed
     if (!isInSidebar())
     {
         notifyParentOfMovement();
@@ -317,11 +289,9 @@ void BlockComponent::moved()
 
 void BlockComponent::mouseDown(const juce::MouseEvent& e)
 {
-    // We need to override the default tooltip handling to make our tooltips visible
-    // Get the tooltip text from this component or its connectors
     juce::String tooltipText = getTooltip();
     
-    // Handle right click for context menu
+    // Right click for context menu
     if (e.mods.isRightButtonDown() && !isInSidebar())
     {
         showConnectionMenu();
@@ -462,7 +432,6 @@ void BlockComponent::mouseDrag(const juce::MouseEvent& e)
         // Normal component dragging
         dragger.dragComponent(this, e, nullptr);
         
-        // Just trigger a repaint for now - connection update happens in moved()
         getParentComponent()->repaint();
     }
 }
@@ -521,8 +490,7 @@ juce::Point<int> BlockComponent::getConnectorCentre(ConnectorPosition position) 
         case Right:  return rightConnector->getBounds().getCentre();
         case Top:    return topConnector->getBounds().getCentre();
         case Bottom: return bottomConnector->getBounds().getCentre();
-        default:     return leftConnector->getBounds().getCentre(); // Default to left
-    }
+        default:     return leftConnector->getBounds().getCentre(); 
 }
 
 juce::Point<int> BlockComponent::getInputConnectorCentre() const
@@ -612,7 +580,6 @@ void BlockComponent::showConnectionMenu()
     
     menu.addItem(10000, "Delete Block", true);
     
-    // Show the menu
     menu.showMenuAsync(juce::PopupMenu::Options()
                       .withTargetComponent(this)
                       .withMinimumWidth(120)
@@ -620,7 +587,6 @@ void BlockComponent::showConnectionMenu()
                       [this, canvas](int result) {
                           if (result == 10000 && canvas != nullptr)
                           {
-                              // Delete this block
                               canvas->removeBlock(this);
                           }
                           else if (result > 0 && result < 10000)
@@ -628,7 +594,6 @@ void BlockComponent::showConnectionMenu()
                               // Handle connection removal based on the selected menu item
                               if (canvas != nullptr)
                               {
-                                  // Get the connection index (result-1)
                                   int connectionIndex = result - 1;
                                   auto connections = canvas->getConnections();
                                   
@@ -792,12 +757,10 @@ void BlockComponent::paintTriangle(juce::Graphics& g, bool skipText)
     
     if (!skipText)
     {
-        // Draw the text
         g.setColour(juce::Colours::black);
         g.setFont(juce::Font(15.0f, juce::Font::bold));
         
-        // Calculate a good text position in the center of the triangle
-        float textY = bounds.getY() + bounds.getHeight() * 0.65f; // Shift downward for better visibility
+        float textY = bounds.getY() + bounds.getHeight() * 0.65f; 
         g.drawText(name, bounds.getX(), textY, bounds.getWidth(), bounds.getHeight() * 0.35f,
                   juce::Justification::centred, true);
     }
@@ -836,17 +799,14 @@ void BlockComponent::paintHexagon(juce::Graphics& g, bool skipText)
     }
     hexPath.closeSubPath();
     
-    // Fill with the component's color
     g.setColour(colour);
     g.fillPath(hexPath);
     
-    // Draw the outline
     g.setColour(juce::Colours::black);
     g.strokePath(hexPath, juce::PathStrokeType(1.5f));
     
     if (!skipText)
     {
-        // Draw the text
         g.setColour(juce::Colours::black);
         g.setFont(juce::Font(15.0f, juce::Font::bold));
         g.drawText(name, bounds, juce::Justification::centred, true);
@@ -859,7 +819,6 @@ void BlockComponent::beginConnectorDrag(ConnectorPosition position, const juce::
     activeConnectorPosition = position;
     currentDragPoint_ = startPoint;
     
-    // Start the drag from the center of the connector
     juce::Point<int> connectorCenter = getConnectorCentre(position);
     currentDragPoint_ = connectorCenter;
 }
@@ -868,7 +827,6 @@ void BlockComponent::adjustGUIBlockConnectors(const juce::Rectangle<int> &bounds
 {
     if (name == "Button")
             {
-                // Center the left/right connectors vertically, keep at edges
                 leftConnector->setBounds(
                     0,
                     bounds.getCentreY() - connectorSize/2,
@@ -883,7 +841,6 @@ void BlockComponent::adjustGUIBlockConnectors(const juce::Rectangle<int> &bounds
                     connectorSize
                 );
                 
-                // Center the top/bottom connectors horizontally, keep at edges
                 topConnector->setBounds(
                     bounds.getCentreX() - connectorSize/2,
                     5,
@@ -900,7 +857,6 @@ void BlockComponent::adjustGUIBlockConnectors(const juce::Rectangle<int> &bounds
             }
             else if (name == "Slider")
             {
-                // For slider, keep connectors at edges but aligned with the track
                 leftConnector->setBounds(
                     35,
                     bounds.getCentreY() - connectorSize/2,
@@ -931,7 +887,6 @@ void BlockComponent::adjustGUIBlockConnectors(const juce::Rectangle<int> &bounds
             }
             else if (name == "Knob")
             {
-                // For knob, center connectors on each edge
                 leftConnector->setBounds(
                     20,
                     bounds.getCentreY() - connectorSize/2,
@@ -964,30 +919,25 @@ void BlockComponent::adjustGUIBlockConnectors(const juce::Rectangle<int> &bounds
 
 void BlockComponent::adjustTriangleConnectors(const juce::Rectangle<int>& bounds, const int connectorSize)
 {
-    // For triangle blocks, customize connector positions
-    
-    // Left connector - bottom left corner
+
     leftConnector->setBounds(
         0,
         bounds.getHeight() - connectorSize,
         connectorSize,
         connectorSize);
     
-    // Right connector - bottom right corner
     rightConnector->setBounds(
         bounds.getWidth() - connectorSize,
         bounds.getHeight() - connectorSize,
         connectorSize,
         connectorSize);
     
-    // Top connector - top center
     topConnector->setBounds(
         bounds.getCentreX() - connectorSize/2,
         0,
         connectorSize,
         connectorSize);
     
-    // Bottom connector - bottom center
     bottomConnector->setBounds(
         bounds.getCentreX() - connectorSize/2,
         bounds.getHeight() - connectorSize,
@@ -997,7 +947,6 @@ void BlockComponent::adjustTriangleConnectors(const juce::Rectangle<int>& bounds
 
 void BlockComponent::adjustHexagonConnectors(const juce::Rectangle<int>& bounds, const int connectorSize)
 {
-    // For hexagon blocks, customize connector positions
     float radius = juce::jmin(bounds.getWidth(), bounds.getHeight()) * 0.5f;
     
     // Get hexagon vertex positions
@@ -1063,7 +1012,6 @@ void BlockComponent::adjustEQBlockConnectors(const juce::Rectangle<int>& bounds,
 
 bool BlockComponent::isPointOverConnector(const juce::Point<int>& point, ConnectorPosition position) const
 {
-    // Get the bounds of the specified connector
     juce::Rectangle<int> connectorBounds;
     
     switch (position)
@@ -1097,9 +1045,7 @@ BlockComponent::ConnectorPosition BlockComponent::getCompatibleConnectorPosition
 
 bool BlockComponent::checkConnectorHit(BlockComponent* otherBlock, const juce::Point<int>& mousePos, ConnectorPosition& hitPosition)
 {
-    // Check if the mouse position hits any connector on the other block
     
-    // Convert mouse position to other block's coordinate space
     juce::Point<int> posInOtherBlock = mousePos - otherBlock->getPosition();
     
     // Check each connector
@@ -1132,11 +1078,9 @@ void BlockComponent::connectToCanvas(BlockComponent* source, BlockComponent* des
     auto* parent = getParentComponent();
     if (parent != nullptr)
     {
-        // Use dynamic_cast to check if parent is a CenterCanvas
         auto* canvas = dynamic_cast<CenterCanvas*>(parent);
         if (canvas != nullptr)
         {
-            // Now we can safely call the method on CenterCanvas with connector positions
             canvas->connectBlocks(source, dest, position);
         }
     }
@@ -1146,7 +1090,6 @@ void BlockComponent::notifyParentOfMovement()
 {
     if (auto* parent = getParentComponent())
     {
-        // Use dynamic_cast to check if parent is a CenterCanvas
         if (auto* canvas = dynamic_cast<CenterCanvas*>(parent))
         {
             canvas->blockMoved();
@@ -1171,12 +1114,10 @@ void BlockComponent::deleteAllChildren()
 
 void BlockComponent::highlightConnections(bool highlight)
 {
-    // Find the parent canvas
     auto* canvas = dynamic_cast<CenterCanvas*>(getParentComponent());
     if (canvas == nullptr)
         return;
     
-    // Get all connections from the canvas
     auto& connections = canvas->getConnections();
     
     // Highlight connections that involve this block

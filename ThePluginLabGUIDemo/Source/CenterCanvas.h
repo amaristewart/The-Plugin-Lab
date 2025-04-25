@@ -15,7 +15,7 @@ public:
     {
         BlockComponent* sourceBlock = nullptr;
         BlockComponent* destBlock = nullptr;
-        int sourceConnectorPosition = 0;  // Using int to match the BlockComponent::ConnectorPosition enum
+        int sourceConnectorPosition = 0; 
         int destConnectorPosition = 0;
     };
 

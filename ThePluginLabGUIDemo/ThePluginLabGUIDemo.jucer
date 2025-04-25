@@ -71,7 +71,6 @@
             file="Source/TopNavigationBar.cpp"/>
       <FILE id="KkVTY1" name="TopNavigationBar.h" compile="0" resource="0"
             file="Source/TopNavigationBar.h"/>
-      <FILE id="PofRb5" name="Utilities.h" compile="0" resource="0" file="Source/Utilities.h"/>
     </GROUP>
   </MAINGROUP>
   <MODULES>
